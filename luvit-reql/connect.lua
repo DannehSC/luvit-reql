@@ -1,15 +1,14 @@
 local json=require('json')
 local ssl=require('openssl')
 local net=require('coro-net')
-local httpCodec=require('http-codec')
-local logger=require('./Utils/logger.lua')
+local x=require('./Utils/bits.lua')
+local reql=require('./Utils/reql.lua')
 local pbkdf=require('./Utils/pbkdf.lua')
+local logger=require('./Utils/logger.lua')
 local proto=require('./Utils/protodef.lua')
 local makeQuery=require('./Utils/query.lua')
 local compare_digest=require('./Utils/compare.lua')
-local x=require('./Utils/bits.lua')
 local xor,bxor256=x[1],x[2]
-local process=setfenv(require('./process.lua'),getfenv())
 local concat,gmatch,format=table.concat,string.gmatch,string.format
 local function checkCoroutine()
 	local thread,bool=coroutine.running()
@@ -133,8 +132,10 @@ return function(options)
 	else
 		coroutine.wrap(connectToRethinkdb)()
 	end
-	return setmetatable({
+	local conn=setmetatable({
 		socket=socket,
 		makeQuery=makeQuery,
 	},{})
+	conn.reql=reql(conn)
+	return conn
 end

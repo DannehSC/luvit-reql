@@ -1,4 +1,5 @@
 local connect=require('./connect.lua')
+local reql=require('./Utils/reql.lua')
 --Do not edit the default table, pass them to the returned function.
 local default={
 	--Access--
@@ -28,4 +29,5 @@ return {
 		end
 		return connect(tab)
 	end,
+	reql=reql()
 }
