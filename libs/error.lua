@@ -3,19 +3,18 @@ local ReqlError = {}
 local hierarchy = {
     ReqlCompileError = 'ReqlError',
     ReqlDriverError = 'ReqlError',
-        ReqlAuthError = 'ReqlDriverError',
+    ReqlAuthError = 'ReqlDriverError',
     ReqlRuntimeError = 'ReqlError',
-        ReqlResourceLimitError = 'ReqlRuntimeError',
-        ReqlUserError = 'ReqlRuntimeError',
-        ReqlInternalError = 'ReqlRuntimeError',
-        ReqlTimeoutError = 'ReqlRuntimeError',
-        ReqlPermissionsError = 'ReqlRuntimeError',
-        ReqlQueryLogicError = 'ReqlRuntimeError',
-            ReqlNonExistenceError = 'ReqlQueryLogicError',
-        ReqlAvailabilityError = 'ReqlRuntimeError',
-            ReqlOpFailedError = 'ReqlAvailabilityError',
-            ReqlOpIndeterminateError = 'ReqlAvailabilityError'
-
+    ReqlResourceLimitError = 'ReqlRuntimeError',
+    ReqlUserError = 'ReqlRuntimeError',
+    ReqlInternalError = 'ReqlRuntimeError',
+    ReqlTimeoutError = 'ReqlRuntimeError',
+    ReqlPermissionsError = 'ReqlRuntimeError',
+    ReqlQueryLogicError = 'ReqlRuntimeError',
+    ReqlNonExistenceError = 'ReqlQueryLogicError',
+    ReqlAvailabilityError = 'ReqlRuntimeError',
+    ReqlOpFailedError = 'ReqlAvailabilityError',
+    ReqlOpIndeterminateError = 'ReqlAvailabilityError'
 }
 
 local format = string.format
