@@ -4,12 +4,15 @@ return {
 	homepage = 'https://github.com/DannehSC/think-luvit',
 	dependencies = {
 		'creationix/coro-net@3.0.0',
+		
 	},
 	tags = {'luvit', 'rethinkdb'},
 	license = 'none',
 	authors = {
 		'DannehSC',
 		'SinisterRectus',
-	},
+		'kev1ns',
+		'JohnnyMorganz',
+	}
 	files = {'**.lua'},
 }

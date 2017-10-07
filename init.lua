@@ -1,5 +1,6 @@
 local connect = require('connect')
 local reql = require('Utils/reql.lua')
+local logger = require('Utils/logger.lua')
 
 -- Default options table || Do NOT edit, pass your options to the function instead
 
@@ -26,11 +27,11 @@ return {
 				options[k] = v
 			end
 		end
-		if not sub(options.address, len(options.address)) == '/' then
-			options.address = options.address..'/'
+		if options.address:sub(#options.address)=='/'then
+			options.address = options.address:sub(1,#options.address-1)
 		end
         if not find(options.address, 'https?', 1) == 1 then
-            print('[WARNING] Procotol not supplied, defaulting to http://')
+            logger.warn.format('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
 		end
 		return connect(options)

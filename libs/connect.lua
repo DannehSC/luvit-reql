@@ -2,17 +2,17 @@ local json=require('json')
 local ssl=require('openssl')
 local net=require('coro-net')
 local x=require('./Utils/bits.lua')
+local errors=require('./error.lua')
 local reql=require('./Utils/reql.lua')
 local pbkdf=require('./Utils/pbkdf.lua')
 local logger=require('./Utils/logger.lua')
 local proto=require('./Utils/protodef.lua')
-local makeQuery=require('./Utils/query.lua')
 local compare_digest=require('./Utils/compare.lua')
 local xor,bxor256=x[1],x[2]
 local concat,gmatch,format=table.concat,string.gmatch,string.format
 local function checkCoroutine()
 	local thread,bool=coroutine.running()
-	return bool==false and true
+	return not bool
 end
 local function new_token()
 	local var = 0
@@ -25,13 +25,17 @@ end
 local get_token=new_token()
 return function(options)
 	local socket,read,write,close={closed=false,}
-	local addr=options.address:sub(1,#options.address-1)
+	local addr=options.address
 	addr=addr:gsub('https://','')
 	addr=addr:gsub('http://','')
 	local tls=options.address:sub(1,5)=='https'
 	local function connectToRethinkdb()
-		local stuff={net.connect(options.port)}
-		print('Connecting to '..addr..':'..options.port)
+		local stuff={net.connect({
+			host=addr,
+			port=options.port,
+		})}
+		logger.info.format(format('Connecting to %s:%s',addr,options.port))
+		--print(errors.ReqlRuntimeError('RUNTIME ERROR'))
 		read,write,close=stuff[1],stuff[2],stuff[6]
 		if type(write)=="string"then return logger.err.format("Socket",write)end
 		socket.read=read
@@ -47,8 +51,7 @@ return function(options)
 		write(string.pack('<I', 0x34c2bdc3))
 		local success,res = pcall(function() return json.decode(read()) end)
 		if not success then
-			return logger.err.format('Driver Error','Error reading JSON data from database.')
-			-- TODO: ReQL Error System
+			return logger.err.format(errors.ReqlDriverError('Error reading JSON data.'))
 		end
 		local nonce = ssl.base64(ssl.random(18), true)
 		local client_first_message = 'n=' .. user .. ',r=' .. nonce
@@ -61,8 +64,7 @@ return function(options)
 		-- Second Server Challenge
 		res = json.decode(read())
 		if not res.success then
-			logger.err.format("Auth Error","Error: "..res.error)
-			return false -- TODO: ReQL Error System
+			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
 		end
 		local auth = {}
 		local server_first_message = res.authentication
@@ -76,8 +78,7 @@ return function(options)
 		local salt = ssl.base64(auth.s, false)
 		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32)
 		if not salted_password then
-			return logger.err.format("Driver Error","Salt error")
-			-- TODO: ReQL Error System || DriverError || salt_error
+			return logger.err.format(errors.ReqlDriverError("Salt error"))
 		end
 		local ckHMAC = ssl.hmac.new('sha256',salted_password)
 		local client_key = ckHMAC:final('Client Key', true)
@@ -93,21 +94,21 @@ return function(options)
 		-- Third Server Challenge
 		res = json.decode(read())
 		if not res.success then
-			return logger.err.format("AuthError","Error: "..res.error)
+			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
 			-- TODO: ReQL Error System
 		end
 		for k,v in gmatch(res.authentication..',','([vV])=(.-),')do
 			auth[k] = v
 		end
 		if not auth.v then
-			return logger.err.format("Driver Error","Missing server signature")
+			return logger.err.format(errors.ReqlDriverError("Missing server signature"))
 		end
 		local skHMAC = ssl.hmac.new('sha256', salted_password)
 		local server_key = skHMAC:final('Server Key', true)
 		local ssHMAC = ssl.hmac.new('sha256', server_key)
 		local server_signature = ssHMAC:final(auth_message, true)
 		if not compare_digest(auth.v, server_signature)then
-			return logger.err.format("Auth Error","invalid server signature")
+			return logger.err.format(errors.ReqlAuthError("Invalid server signature"))
 		end
 		print"Connected"
 		coroutine.wrap(function()
@@ -134,7 +135,6 @@ return function(options)
 	end
 	local conn=setmetatable({
 		socket=socket,
-		makeQuery=makeQuery,
 	},{})
 	conn.reql=reql(conn)
 	return conn
