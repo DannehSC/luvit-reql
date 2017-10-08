@@ -1,7 +1,7 @@
 return {
 	name = 'DannehSC/think-luvit',
 	version = '1.0.0',
-	homepage = 'https://github.com/DannehSC/think-luvit',
+	homepage = 'https://github.com/DannehSC/luvit-reql',
 	dependencies = {
 		'creationix/coro-net@3.0.0',
 		

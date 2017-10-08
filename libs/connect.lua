@@ -8,12 +8,10 @@ local pbkdf=require('./Utils/pbkdf.lua')
 local logger=require('./Utils/logger.lua')
 local proto=require('./Utils/protodef.lua')
 local compare_digest=require('./Utils/compare.lua')
+local cmanager=require('./Utils/coroutinemanager.lua')
+local process=require('./Utils/processor.lua').processData
 local xor,bxor256=x[1],x[2]
 local concat,gmatch,format=table.concat,string.gmatch,string.format
-local function checkCoroutine()
-	local thread,bool=coroutine.running()
-	return not bool
-end
 local function new_token()
 	local var = 0
 	local function get_token()
@@ -23,6 +21,7 @@ local function new_token()
 	return get_token
 end
 local get_token=new_token()
+local checkCoroutine=cmanager.isCoro
 return function(options)
 	local socket,read,write,close={closed=false,}
 	local addr=options.address
@@ -123,6 +122,10 @@ return function(options)
 				else
 					print("Non-JSON data",data)
 				end
+				local t,l,d=process(data)
+				print(t)
+				print(l)
+				p(json.decode(d))
 			end
 			socket.closed=true
 			return logger.err.format('Socket','Socket closed.')

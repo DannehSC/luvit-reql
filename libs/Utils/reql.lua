@@ -1,25 +1,24 @@
 local processQuery=require('./query.lua')
 function newReql(conn,db)
-	local reql={}
-	if conn then reql.defaultConn=conn end
+	local reql={
+		ran=false
+	}
+	if conn then reql.conn=conn end
 	function reql.db(name)
-		reql.database=name
+		assert(reql.ran,'ReQL instance already ran.')
+		reql.setdatabase=name
 	end
 	function reql.table(name)
-		reql.table=name
+		assert(reql.ran,'ReQL instance already ran.')
+		reql.settable=name
 	end
 	function reql.run(tab)
-		if not reql.defaultConn and not tab.conn then
-			error'No connection provided to reql.run()'
-		end
-		if not reql.database and not tab.db then
-			error'No database provided to reql.run()'
-		end
-		if not reql.table and not tab.table then
-			error'No table provided to reql.run()'
-		end
-		local conn,db,table=(reql.defaultConn or tab.conn),(reql.database or tab.db),(reql.table or tab.table)
-		--processQuery(conn,db,table,reql)
+		reql.conn=reql.conn or tab.conn
+		assert(reql.conn~=nil,'No connection passed to reql.run()')
+		reql.setdatabase=reql.gdb or tab.db
+		reql.settable=reql.settable or tab.table
+		processQuery(reql)
+		reql.ran=true
 	end
 	return reql
 end
