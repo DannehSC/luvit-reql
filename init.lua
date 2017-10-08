@@ -37,5 +37,7 @@ return {
 		return connect(options)
 	end,
 
-	reql = reql()
+	reql = function()
+		return reql()
+	end
 }

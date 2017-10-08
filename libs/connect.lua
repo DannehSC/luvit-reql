@@ -12,6 +12,7 @@ local cmanager=require('./Utils/coroutinemanager.lua')
 local process=require('./Utils/processor.lua').processData
 local xor,bxor256=x[1],x[2]
 local concat,gmatch,format=table.concat,string.gmatch,string.format
+local checkCoroutine=cmanager.isCoro
 local function new_token()
 	local var = 0
 	local function get_token()
@@ -20,8 +21,6 @@ local function new_token()
 	end
 	return get_token
 end
-local get_token=new_token()
-local checkCoroutine=cmanager.isCoro
 return function(options)
 	local socket,read,write,close={closed=false,}
 	local addr=options.address
@@ -50,6 +49,7 @@ return function(options)
 		write(string.pack('<I', 0x34c2bdc3))
 		local success,res = pcall(function() return json.decode(read()) end)
 		if not success then
+			socket.close()
 			return logger.err.format(errors.ReqlDriverError('Error reading JSON data.'))
 		end
 		local nonce = ssl.base64(ssl.random(18), true)
@@ -63,6 +63,7 @@ return function(options)
 		-- Second Server Challenge
 		res = json.decode(read())
 		if not res.success then
+			socket.close()
 			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
 		end
 		local auth = {}
@@ -77,6 +78,7 @@ return function(options)
 		local salt = ssl.base64(auth.s, false)
 		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32)
 		if not salted_password then
+			socket.close()
 			return logger.err.format(errors.ReqlDriverError("Salt error"))
 		end
 		local ckHMAC = ssl.hmac.new('sha256',salted_password)
@@ -93,6 +95,7 @@ return function(options)
 		-- Third Server Challenge
 		res = json.decode(read())
 		if not res.success then
+			socket.close()
 			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
 			-- TODO: ReQL Error System
 		end
@@ -112,20 +115,11 @@ return function(options)
 		print"Connected"
 		coroutine.wrap(function()
 			for data in read do
-				local tab=json.decode(data)
-				if tab then
-					if asd then
-						print(asd)
-					else
-						print("Unhandled data\n\n",data)
-					end
-				else
-					print("Non-JSON data",data)
-				end
-				local t,l,d=process(data)
-				print(t)
-				print(l)
-				p(json.decode(d))
+				process(data,function(t,l,d)
+					print('TOKEN',t)
+					print('LEN',l)
+					p(json.decode(d))
+				end)
 			end
 			socket.closed=true
 			return logger.err.format('Socket','Socket closed.')
@@ -136,9 +130,14 @@ return function(options)
 	else
 		coroutine.wrap(connectToRethinkdb)()
 	end
+	options.password='<HIDDEN>'
 	local conn=setmetatable({
-		socket=socket,
+		_socket=socket,
+		_getToken=new_token(),
+		_options=options
 	},{})
-	conn.reql=reql(conn)
+	conn.reql=function()
+		return reql(conn)
+	end
 	return conn
 end

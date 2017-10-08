@@ -13,6 +13,7 @@ return {
 		'SinisterRectus',
 		'kev1ns',
 		'JohnnyMorganz',
+		'Tigerism'
 	}
 	files = {'**.lua'},
 }
