@@ -13,9 +13,10 @@ function newReql(conn,db)
 		reql.settable=name
 	end
 	function reql.run(tab)
+		assert(reql.ran,'ReQL instance already ran.')
 		reql.conn=reql.conn or tab.conn
 		assert(reql.conn~=nil,'No connection passed to reql.run()')
-		reql.setdatabase=reql.gdb or tab.db
+		reql.setdatabase=reql.setdatabase or tab.db
 		reql.settable=reql.settable or tab.table
 		processQuery(reql)
 		reql.ran=true
