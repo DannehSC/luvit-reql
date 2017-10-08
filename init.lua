@@ -16,7 +16,7 @@ local sub, len, find = string.sub, string.len, string.find
 
 return {
 	connect = function(options)
-        options = options and options or {}
+        options = options or {}
         local type = type(options)
         if not type == 'table' then
             error(format('Bad argument #1 to luvit-reql/init.lua, table expected, got %s', type))
