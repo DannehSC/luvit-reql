@@ -1,7 +1,13 @@
 local intlib=require('./intlib.lua')
+local errors=require('../error.lua')
 local protodef=require('./protodef.lua')
 local cmanager=require('./coroutinemanager.lua')
 local responses=protodef.Response
+local errcodes={
+	[16]={t='CLIENT_ERROR',f=errors.ReqlDriverError},
+	[17]={t='COMPILE_ERROR',f=errors.ReqlCompileError},
+	[18]={t='RUNTIME_ERROR',f=errors.ReqlRuntimeError}
+}
 local callbacks={}
 local processor={}
 local buffers={}
@@ -18,7 +24,7 @@ function processor.processData(data,callback)
 	local token=int(data:sub(1,8))
 	local length=int(data:sub(9,12))
 	local resp=data:sub(13)
-	local t,respn=data:sub(13):match('([t])":(%d)')
+	local t,respn=data:sub(13):match('([t])":(%d?%d)')
 	respn=tonumber(respn)
 	if respn==1 then
 		print('resp: 1')
@@ -43,6 +49,9 @@ function processor.processData(data,callback)
 			return
 		end
 		buffers[token]:add(data:sub(13))
+	elseif errcodes[respn]then
+		local ec=errcodes[respn]
+		callback(nil,ec.f(ec.t),data:sub(13))
 	else
 		print('resp: ?')
 	end

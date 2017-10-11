@@ -33,7 +33,6 @@ return function(options)
 			port=options.port,
 		})}
 		logger.info.format(format('Connecting to %s:%s',addr,options.port))
-		--print(errors.ReqlRuntimeError('RUNTIME ERROR'))
 		read,write,close=stuff[1],stuff[2],stuff[6]
 		if type(write)=="string"then return logger.err.format("Socket",write)end
 		socket.read=read
@@ -72,7 +71,7 @@ return function(options)
 			auth[k] = v
 		end
 		local i, j = auth.r:find(nonce,1,true)
-		assert(i == 1 and j == #nonce,'Invalid Nonce') -- TODO: ReQL Error System
+		assert(i == 1 and j == #nonce,errors.ReqlDriverError('Invalid Nonce'))
 		auth.i = tonumber(auth.i)
 		local client_final_message = 'c=biws,r=' .. auth.r
 		local salt = ssl.base64(auth.s, false)
@@ -97,7 +96,6 @@ return function(options)
 		if not res.success then
 			socket.close()
 			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
-			-- TODO: ReQL Error System
 		end
 		for k,v in gmatch(res.authentication..',','([vV])=(.-),')do
 			auth[k] = v
@@ -118,7 +116,9 @@ return function(options)
 				process(data,function(t,l,d)
 					print('TOKEN',t)
 					print('LEN',l)
-					p(json.decode(d))
+					if d then
+						p(json.decode(d))
+					end
 				end)
 			end
 			socket.closed=true

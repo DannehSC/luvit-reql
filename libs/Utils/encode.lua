@@ -1,4 +1,5 @@
 local fmt=string.format
+local json=require('json')
 local protodef=require('./protodef.lua')
 local term=protodef.Term
 local query=protodef.Query
@@ -12,17 +13,38 @@ local function encode(reql)
 	if queries[reql.query]then
 		return queries[reql.query]
 	end
-	assert(reql.settable and reql.setdatabase~=nil,'ReQL table passed to query encoder, no database present.')
+	if reql._table~=nil and reql._database==nil then
+		error('ReQL table passed to query encoder, no database present.')
+	end
 	local str=''
-	local db=reql.setdatabase
-	str=str..fmt('[%s, ["%s"]]',term.db,db)
-	local tab=reql.settable
-	str=fmt('[%s, [%s, "%s"]]',term.table,str,tab)
-	if reql.setget then
-		str=fmt('[%s, [%s, "%s"]]',term.get,str,reql.setget)
-		print(str)
+	local db=reql._database
+	if db then
+		str=str..fmt('[%s, ["%s"]]',term.db,db)
+	end
+	local tab=reql._table
+	if tab then
+		str=fmt('[%s, [%s, "%s"]]',term.table,str,tab)
+	end
+	if reql._get then
+		str=fmt('[%s, [%s, "%s"]]',term.get,str,reql._get)
+	end
+	if reql._insert then
+		local js=json.encode(reql._insert)
+		str=fmt('[%s, [%s, %s]]',term.insert,str,js)
+	end
+	if reql._replace then
+		local js=json.encode(reql._replace)
+		str=fmt('[%s, [%s, %s]]',term.replace,str,js)
+	end
+	if reql._update then
+		local js=json.encode(reql._update)
+		str=fmt('[%s, [%s, %s]]',term.update,str,js)
+	end
+	if reql._js then
+		str=fmt('[%s, ["%s"]]',term.js,reql._js)
 	end
 	str='[1,'..str..',{}]'
+	p(str)
 	return str
 end
 return encode
