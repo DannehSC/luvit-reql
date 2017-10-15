@@ -22,7 +22,9 @@ local function new_token()
 	return get_token
 end
 return function(options)
-	local socket,read,write,close={closed=false,}
+	local socket={
+		closed=false
+	}
 	local addr=options.address
 	addr=addr:gsub('https://','')
 	addr=addr:gsub('http://','')
@@ -33,8 +35,11 @@ return function(options)
 			port=options.port,
 		})}
 		logger.info.format(format('Connecting to %s:%s',addr,options.port))
-		read,write,close=stuff[1],stuff[2],stuff[6]
-		if type(write)=="string"then return logger.err.format("Socket",write)end
+		local read,write,close=stuff[1],stuff[2],stuff[6]
+		if type(write)=="string"then
+			socket.closed=true
+			return logger.err.format("Socket",write)
+		end
 		socket.read=read
 		socket.write=write
 		socket.close=function()
@@ -108,18 +113,13 @@ return function(options)
 		local ssHMAC = ssl.hmac.new('sha256', server_key)
 		local server_signature = ssHMAC:final(auth_message, true)
 		if not compare_digest(auth.v, server_signature)then
+			socket.close()
 			return logger.err.format(errors.ReqlAuthError("Invalid server signature"))
 		end
-		print"Connected"
+		logger.info.format(format("Connection to %s:%s complete.",addr,options.port))
 		coroutine.wrap(function()
 			for data in read do
-				process(data,function(t,l,d)
-					print('TOKEN',t)
-					print('LEN',l)
-					if d then
-						p(json.decode(d))
-					end
-				end)
+				process(data)
 			end
 			socket.closed=true
 			return logger.err.format('Socket','Socket closed.')
@@ -134,7 +134,11 @@ return function(options)
 	local conn=setmetatable({
 		_socket=socket,
 		_getToken=new_token(),
-		_options=options
+		_options=options,
+		close=function()
+			logger.info.format('Closing socket, cleaning up.')
+			socket.close()
+		end
 	},{})
 	conn.reql=function()
 		return reql(conn)
