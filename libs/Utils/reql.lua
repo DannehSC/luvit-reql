@@ -194,7 +194,7 @@ function newReql(conn)
 		reql.conn=reql.conn or tab.conn
 		assert(reql.conn~=nil,'No connection passed to reql.run()')
 		assert(not reql.conn._socket.closed,'Socket closed. Cannot run.')
-		reql._database=reql._database or tab.db or nil
+		reql._database=reql._database or tab.db or reql.conn._options.db or nil
 		reql._table=reql._table or tab.table or nil
 		local token=reql.conn._getToken()
 		local x,is=callback,cmanager:isCoro()

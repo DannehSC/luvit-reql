@@ -106,6 +106,9 @@ function connect(options)
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
+			if options.debug then
+				p('DEBUG',res.error)
+			end
 			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
 		end
 		for k,v in gmatch(res.authentication..',','([vV])=(.-),')do
