@@ -9,7 +9,8 @@ local default = {
     port = 28015,
     user = 'admin',
     password = '',
-    db = 'test'
+    db = 'test',
+	reconnect = false,
 }
 
 local format = string.format

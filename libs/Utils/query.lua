@@ -8,5 +8,5 @@ return function(reql,token,callback)
 	local length=#validEncode
 	local data=table.concat({bytes(token,8),bytes(length,4),validEncode})
 	reql.conn._socket.write(data)
-	processor.cbs[token]=callback
+	processor.cbs[token]={f=callback,raw=reql.raw}
 end

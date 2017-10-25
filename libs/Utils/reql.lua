@@ -1,3 +1,4 @@
+local json=require('json')
 local processQuery=require('./query.lua')
 local cmanager=require('./coroutinemanager.lua')
 local newReql
@@ -10,19 +11,25 @@ function newReql(conn)
 	function reql.db(name)
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
-		reql._database=name
+		reql._database=tostring(name)
 		return reql
 	end
 	function reql.table(name)
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
-		reql._table=name
+		reql._table=tostring(name)
 		return reql
 	end
 	function reql.get(id)
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
 		reql._get=id
+		return reql
+	end
+	function reql.getField(field)
+		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran,'ReQL instance already ran.')
+		reql._get_field=id
 		return reql
 	end
 	function reql.insert(tab)
@@ -77,25 +84,29 @@ function newReql(conn)
 		assert(type(tab)=='table','bad argument #1 to reql.inOrRe, table expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
-		assert(tab.id~=nil,'argument \'id\' not passed to inOrRe')
-		local exists=newReql(conn).db('name').table('name').get(tab.id).run()
-		if exists then
+		--assert(tab.id~=nil,'argument \'id\' not passed to inOrRe')
+		assert(cmanager:isCoro(),'reql.inOrRe not ran in coroutine.')
+		local exists=newReql(conn).db(reql._database).table(reql._table).get(tab.id).run({raw=true})
+		if exists==nil or exists==json.null or exists[1]==nil then
 			reql.replace(tab)
 		else
 			reql.insert(tab)
 		end
+		return reql
 	end
 	function reql.inOrUp(tab)
 		assert(type(tab)=='table','bad argument #1 to reql.inOrUp, table expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
-		assert(tab.id~=nil,'argument \'id\' not passed to inOrUp')
-		local exists=newReql(conn).db('name').table('name').get(tab.id).run()
-		if exists then
+		--assert(tab.id~=nil,'argument \'id\' not passed to inOrUp')
+		assert(cmanager:isCoro(),'reql.inOrUp not ran in coroutine.')
+		local exists=newReql(conn).db(reql._database).table(reql._table).get(tab.id).run({raw=true})
+		if exists==nil or exists==json.null or exists[1]==nil then
 			reql.update(tab)
 		else
 			reql.insert(tab)
 		end
+		return reql
 	end
 	function reql.indexCreate(name)
 		assert(type(name)=='string','bad argument #1 to reql.indexCreate, string expected.')
@@ -121,7 +132,7 @@ function newReql(conn)
 		return reql
 	end
 	function reql.dbCreate(name)
-		assert(type(name)=='string','bad argument #1 to reql.db_create, string expected.')
+		assert(type(name)=='string','bad argument #1 to reql.dbCreate, string expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
 		reql.usable=false
@@ -129,7 +140,7 @@ function newReql(conn)
 		return reql
 	end
 	function reql.dbDrop(name)
-		assert(type(name)=='string','bad argument #1 to reql.db_drop, string expected.')
+		assert(type(name)=='string','bad argument #1 to reql.dbDrop, string expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
 		reql.usable=false
@@ -151,7 +162,7 @@ function newReql(conn)
 		return reql
 	end
 	function reql.tableCreate(name)
-		assert(type(name)=='string','bad argument #1 to reql.table_create, string expected.')
+		assert(type(name)=='string','bad argument #1 to reql.tableCreate, string expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
 		reql.usable=false
@@ -159,7 +170,7 @@ function newReql(conn)
 		return reql
 	end
 	function reql.tableDrop(name)
-		assert(type(name)=='string','bad argument #1 to reql.table_drop, string expected.')
+		assert(type(name)=='string','bad argument #1 to reql.tableDrop, string expected.')
 		assert(reql.usable,'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran,'ReQL instance already ran.')
 		reql.usable=false

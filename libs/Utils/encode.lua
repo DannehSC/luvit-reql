@@ -29,15 +29,15 @@ local function encode(reql)
 		str=fmt('[%s, [%s, "%s"]]',term.get,str,reql._get)
 	end
 	if reql._insert then
-		local js=json.encode(reql._insert)
+		local js=json.encode({term.datum,reql._insert})
 		str=fmt('[%s, [%s, %s]]',term.insert,str,js)
 	end
 	if reql._replace then
-		local js=json.encode(reql._replace)
+		local js=json.encode({term.datum,reql._replace})
 		str=fmt('[%s, [%s, %s]]',term.replace,str,js)
 	end
 	if reql._update then
-		local js=json.encode(reql._update)
+		local js=json.encode({term.datum,reql._update})
 		str=fmt('[%s, [%s, %s]]',term.update,str,js)
 	end
 	if reql._filter then
@@ -76,6 +76,9 @@ local function encode(reql)
 	end
 	if reql._index_list then
 		str=fmt('[%s, [%s]]',term.index_list,str)
+	end
+	if reql._get_field then
+		str=fmt('[%s, [%s, "%s"]]',term.get_field,str,reql._get_field)
 	end
 	str='[1,'..str..',{}]'
 	return str

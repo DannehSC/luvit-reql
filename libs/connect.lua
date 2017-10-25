@@ -1,12 +1,11 @@
 local json=require('json')
 local ssl=require('openssl')
 local net=require('coro-net')
-local x=require('./Utils/bits.lua')
 local errors=require('./error.lua')
+local x=require('./Utils/bits.lua')
 local reql=require('./Utils/reql.lua')
 local pbkdf=require('./Utils/pbkdf.lua')
 local logger=require('./Utils/logger.lua')
-local proto=require('./Utils/protodef.lua')
 local compare_digest=require('./Utils/compare.lua')
 local cmanager=require('./Utils/coroutinemanager.lua')
 local process=require('./Utils/processor.lua').processData
@@ -21,7 +20,15 @@ local function new_token()
 	end
 	return get_token
 end
-return function(options)
+local function copy(t)
+	local n={}
+	for k,v in pairs(t)do
+		n[k]=v
+	end
+	return n
+end
+local connect
+function connect(options)
 	local socket={
 		closed=false
 	}
@@ -30,6 +37,7 @@ return function(options)
 	addr=addr:gsub('http://','')
 	local tls=options.address:sub(1,5)=='https'
 	local function connectToRethinkdb()
+		local opt=copy(options)
 		local stuff={net.connect({
 			host=addr,
 			port=options.port,
@@ -47,8 +55,6 @@ return function(options)
 			close()
 		end
 		local user,auth_key=options.user,options.password
-		local nonce=ssl.base64(ssl.random(18),true)
-		local client_first_message='n,,n='..options.user..',r='.. nonce
 		-- Initiation (First Client Message/First Server Challenge)
 		write(string.pack('<I', 0x34c2bdc3))
 		local success,res = pcall(function() return json.decode(read()) end)
@@ -122,7 +128,10 @@ return function(options)
 				process(data)
 			end
 			socket.closed=true
-			return logger.err.format('Socket','Socket closed.')
+			logger.warn.format(format('Connection to %s:%s closed.',addr,options.port))
+			if options.reconnect then
+				connect(opt)
+			end
 		end)()
 	end
 	if checkCoroutine()then
@@ -137,6 +146,7 @@ return function(options)
 		_options=options,
 		close=function()
 			logger.info.format('Closing socket, cleaning up.')
+			options.reconnect=false
 			socket.close()
 		end
 	},{})
@@ -145,3 +155,4 @@ return function(options)
 	end
 	return conn
 end
+return connect
