@@ -1,7 +1,10 @@
 local ssl=require('openssl')
 local x=require('./bits.lua')
-local xor,bxor256=x[1],x[2]
-local len,fmod,char,sub,ceil,concat,pack=string.len,math.fmod,string.char,string.sub,math.ceil,table.concat,string.pack
+
+local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
+local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
+local fmod, concat = math.fmod, table.concat
+
 local function pbkdf(digest, password, salt, iteration, dkLen)
 	local function PRF(P, S)
 		local hmac = ssl.hmac.new(digest, P)
@@ -17,13 +20,13 @@ local function pbkdf(digest, password, salt, iteration, dkLen)
 
 	local T = {}
 
-	for i=1, l do
+	for i = 1, l do
 		local bytes = pack('!1>I4', fmod(i, 2 ^ (8 * 4)))
 		local U = PRF(password, salt .. bytes)
 
 		local t = {}
 
-		for _=2, iteration do
+		for _ = 2, iteration do
 			xor(t, U)
 			U = PRF(password, U)
 		end
@@ -34,4 +37,5 @@ local function pbkdf(digest, password, salt, iteration, dkLen)
 
 	return sub(concat(T), 1, dkLen)
 end
+
 return pbkdf
