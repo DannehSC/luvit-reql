@@ -32,8 +32,20 @@ function processor.processData(data)
 	if respn==1 then
 		rest=data:sub(13)
 		local dat
-		dat=json.decode(rest).r
-		processor.cbs[token].f(dat)
+		local todat=processor.cbs[token]
+		if not todat then return end
+		if todat.raw then
+			dat=rest
+			if dat:find('%"r%"%:%[null%]')then
+				dat=nil
+			end
+		else
+			dat=json.decode(rest).r
+		end
+		todat.f(dat)
+		if not todat.keepAlive then
+			processor.cbs[token]=nil
+		end
 	elseif respn==2 then
 		if not buffers[token]then
 			buffers[token]=newBuffer('')
@@ -41,9 +53,20 @@ function processor.processData(data)
 		local buffer=buffers[token]
 		buffer:add(data:sub(13))
 		local dat
-		dat=json.decode(buffer.data).r
-		processor.cbs[token].f(dat)
-		processor.cbs[token]=nil
+		local todat=processor.cbs[token]
+		if not todat then return end
+		if todat.raw then
+			dat=buffer.data
+			if dat:find('%"r%"%:%[null%]')then
+				dat=nil
+			end
+		else
+			dat=json.decode(buffer.data).r
+		end
+		todat.f(dat)
+		if not todat.keepAlive then
+			processor.cbs[token]=nil
+		end
 		buffers[token]=nil
 	elseif respn==3 then
 		if not buffers[token]then
@@ -55,7 +78,10 @@ function processor.processData(data)
 		local ec=errcodes[respn]
 		local err=ec.f(ec.t)
 		logger.warn.format('Error encountered. Error code: '..respn..' | Error info: '..tostring(err))
-		processor.cbs[token].f(nil,err,json.decode(data:sub(13)))
+		if processor.cbs[token]then
+			processor.cbs[token].f(nil,err,json.decode(data:sub(13)))
+			processor.cbs[token]=nil
+		end
 	else
 		logger.warn.format(string.format('Unknown response: %s',respn))
 	end

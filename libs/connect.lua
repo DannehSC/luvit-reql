@@ -128,6 +128,7 @@ function connect(options)
 		logger.info.format(format("Connection to %s:%s complete.",addr,options.port))
 		coroutine.wrap(function()
 			for data in read do
+				p(data)
 				process(data)
 			end
 			socket.closed=true

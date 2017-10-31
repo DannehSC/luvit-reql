@@ -11,6 +11,7 @@ local default = {
     password = '',
     db = 'test',
 	reconnect = false,
+	reusable = false,
 }
 
 local format = string.format
