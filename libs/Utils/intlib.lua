@@ -1,12 +1,12 @@
-return{
-	byte_to_int=function(str)
+return {
+	byte_to_int = function(str)
 		local n = 0
-		for k=1, string.len(str) do
+		for k = 1, string.len(str) do
 			n = n + string.byte(str, k) * 2 ^ ((k - 1) * 8)
 		end
 		return n
 	end,
-	int_to_bytes=function(num, bytes)
+	int_to_bytes = function(num, bytes)
 		local res = {}
 		num = math.fmod(num, 2 ^ (8 * bytes))
 		for k = bytes, 1, -1 do

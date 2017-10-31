@@ -9,9 +9,12 @@ local logger=require('./Utils/logger.lua')
 local compare_digest=require('./Utils/compare.lua')
 local cmanager=require('./Utils/coroutinemanager.lua')
 local process=require('./Utils/processor.lua').processData
-local xor,bxor256=x[1],x[2]
-local concat,gmatch,format=table.concat,string.gmatch,string.format
-local checkCoroutine=cmanager.isCoro
+
+local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
+
+local concat, gmatch, format = table.concat, string.gmatch, string.format
+local checkCoroutine = cmanager.isCoro
+
 local function new_token()
 	local var = 0
 	local function get_token()
@@ -21,43 +24,43 @@ local function new_token()
 	return get_token
 end
 local function copy(t)
-	local n={}
-	for k,v in pairs(t)do
-		n[k]=v
+	local n = {}
+	for k, v in pairs(t)do
+		n[k] = v
 	end
 	return n
 end
 local connect
 function connect(options)
-	local socket={
-		closed=false
+	local socket = {
+		closed = false
 	}
-	local addr=options.address
-	addr=addr:gsub('https://','')
-	addr=addr:gsub('http://','')
-	local tls=options.address:sub(1,5)=='https'
+	local addr = options.address
+	addr = addr:gsub('https://','')
+	addr = addr:gsub('http://','')
+	local tls = options.address:sub(1, 5) == 'https' -- NOTE: unused variable
 	local function connectToRethinkdb()
-		local opt=copy(options)
-		local stuff={net.connect({
-			host=addr,
-			port=options.port,
+		local opt = copy(options)
+		local stuff = {net.connect({
+			host = addr,
+			port = options.port,
 		})}
-		logger.info.format(format('Connecting to %s:%s',addr,options.port))
-		local read,write,close=stuff[1],stuff[2],stuff[6]
-		if type(write)=="string"then
-			socket.closed=true
-			return logger.err.format("Socket",write)
+		logger.info.format(format('Connecting to %s:%s', addr, options.port))
+		local read, write, close = stuff[1], stuff[2], stuff[6]
+		if type(write) == "string"then
+			socket.closed = true
+			return logger.err.format("Socket", write)
 		end
-		socket.read=read
-		socket.write=write
-		socket.close=function()
-			socket.closed=true
+		socket.read = read
+		socket.write = write
+		socket.close = function()
+			socket.closed = true
 			close()
 		end
-		local user,auth_key=options.user,options.password
+		local user, auth_key = options.user, options.password
 		-- Initiation (First Client Message/First Server Challenge)
 		write(string.pack('<I', 0x34c2bdc3))
-		local success,res = pcall(function() return json.decode(read()) end)
+		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: unused variable
 		if not success then
 			socket.close()
 			return logger.err.format(errors.ReqlDriverError('Error reading JSON data.'))
@@ -86,7 +89,7 @@ function connect(options)
 		auth.i = tonumber(auth.i)
 		local client_final_message = 'c=biws,r=' .. auth.r
 		local salt = ssl.base64(auth.s, false)
-		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32)
+		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32) -- NOTE: unused variable
 		if not salted_password then
 			socket.close()
 			return logger.err.format(errors.ReqlDriverError("Salt error"))
@@ -143,18 +146,18 @@ function connect(options)
 	else
 		coroutine.wrap(connectToRethinkdb)()
 	end
-	options.password='<HIDDEN>'
-	local conn=setmetatable({
-		_socket=socket,
-		_getToken=new_token(),
-		_options=options,
-		close=function()
+	options.password = '<HIDDEN>'
+	local conn = setmetatable({
+		_socket = socket,
+		_getToken = new_token(),
+		_options = options,
+		close = function()
 			logger.info.format('Closing socket, cleaning up.')
-			options.reconnect=false
+			options.reconnect = false
 			socket.close()
 		end
 	},{})
-	conn.reql=function()
+	conn.reql = function()
 		return reql(conn)
 	end
 	return conn

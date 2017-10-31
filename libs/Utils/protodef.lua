@@ -1,16 +1,16 @@
-return{
-	AuthErrors={
-		[10]="invalid-encoding",
-		[11]="extensions-not-supported ; unrecognized 'm' value",
-		[12]="invalid-proof",
-		[13]="channel-bindings-dont-match",
-		[14]="server-does-support-channel-binding ; server does not support channel binding",
-		[15]="channel-binding-not-supported",
-		[16]="unsupported-channel-binding-type",
-		[17]="unknown-user",
-		[18]="invalid-username-encoding ; invalid username encoding (invalid UTF-8 or SASLprep failed)",
-		[19]="no-resources",
-		[20]="other-error",
+return {
+	AuthErrors = {
+		[10] = "invalid-encoding",
+		[11] = "extensions-not-supported ; unrecognized 'm' value",
+		[12] = "invalid-proof",
+		[13] = "channel-bindings-dont-match",
+		[14] = "server-does-support-channel-binding ; server does not support channel binding",
+		[15] = "channel-binding-not-supported",
+		[16] = "unsupported-channel-binding-type",
+		[17] = "unknown-user",
+		[18] = "invalid-username-encoding ; invalid username encoding (invalid UTF-8 or SASLprep failed)",
+		[19] = "no-resources",
+		[20] = "other-error",
 	},
 	Protocol = {
 		PROTOBUF = 656407617,
