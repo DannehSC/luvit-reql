@@ -22,8 +22,8 @@ return {
 	connect = function(options)
 		options = options and options or {}
 		local type = type(options)
-		if not type == 'table' then
-			return error(format('Bad argument #1 to luvit-reql/init.lua, table expected, got %s', type))
+		if type ~= 'table' then
+			return error(format('Bad argument #1 to luvit-reql.connect(), table expected, got %s', type))
 		end
 		for k,v in pairs(default) do
 			if not options[k] then

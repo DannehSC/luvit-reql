@@ -1,11 +1,8 @@
 local json = require('json')
 local intlib = require('./intlib.lua')
-local errors = require('../error.lua')
 local logger = require('./logger.lua')
--- local emitter = require('./emitty.lua')
--- local protodef = require('./protodef.lua')
+local errors = require('../error.lua')
 -- local cmanager = require('./coroutinemanager.lua')
--- local responses = protodef.Response
 
 local errcodes = {
 	[16] = {t = 'CLIENT_ERROR',f = errors.ReqlDriverError},
@@ -43,7 +40,13 @@ function processor.processData(data)
 				dat = nil
 			end
 		else
-			dat = json.decode(rest).r
+			local theresp=json.decode(rest)
+			if theresp then
+				dat=theresp.r
+			else
+				logger.warn(string.format('Bad JSON: %s', rest))
+				dat=rest
+			end
 		end
 		todat.f(dat)
 		if not todat.keepAlive then
@@ -64,7 +67,13 @@ function processor.processData(data)
 				dat = nil
 			end
 		else
-			dat = json.decode(buffer.data).r
+			local theresp=json.decode(buffer.data)
+			if theresp then
+				dat=theresp.r
+			else
+				logger.warn(string.format('Bad JSON: %s',buffer.data))
+				dat=buffer.data
+			end
 		end
 		todat.f(dat)
 		if not todat.keepAlive then
@@ -80,13 +89,13 @@ function processor.processData(data)
 	elseif errcodes[respn]then
 		local ec = errcodes[respn]
 		local err = ec.f(ec.t)
-		logger.warn.format('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
+		logger.warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
 		if processor.cbs[token]then
 			processor.cbs[token].f(nil, err, json.decode(data:sub(13)))
 			processor.cbs[token] = nil
 		end
 	else
-		logger.warn.format(string.format('Unknown response: %s', respn))
+		logger.warn(string.format('Unknown response: %s', respn))
 	end
 end
 return processor
