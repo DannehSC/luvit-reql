@@ -45,11 +45,11 @@ function connect(options)
 			host = addr,
 			port = options.port,
 		})}
-		logger.info.format(format('Connecting to %s:%s', addr, options.port))
+		logger.info(format('Connecting to %s:%s', addr, options.port))
 		local read, write, close = stuff[1], stuff[2], stuff[6]
 		if type(write) == "string"then
 			socket.closed = true
-			return logger.err.format("Socket", write)
+			return logger.err("Socket", write)
 		end
 		socket.read = read
 		socket.write = write
@@ -63,7 +63,7 @@ function connect(options)
 		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: unused variable
 		if not success then
 			socket.close()
-			return logger.err.format(errors.ReqlDriverError('Error reading JSON data.'))
+			return logger.err(errors.ReqlDriverError('Error reading JSON data.'))
 		end
 		local nonce = ssl.base64(ssl.random(18), true)
 		local client_first_message = 'n=' .. user .. ',r=' .. nonce
@@ -77,7 +77,7 @@ function connect(options)
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
-			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
+			return logger.err(errors.ReqlAuthError("Error: "..res.error))
 		end
 		local auth = {}
 		local server_first_message = res.authentication
@@ -92,7 +92,7 @@ function connect(options)
 		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32) -- NOTE: unused variable
 		if not salted_password then
 			socket.close()
-			return logger.err.format(errors.ReqlDriverError("Salt error"))
+			return logger.err(errors.ReqlDriverError("Salt error"))
 		end
 		local ckHMAC = ssl.hmac.new('sha256',salted_password)
 		local client_key = ckHMAC:final('Client Key', true)
@@ -112,13 +112,13 @@ function connect(options)
 			if options.debug then
 				p('DEBUG',res.error)
 			end
-			return logger.err.format(errors.ReqlAuthError("Error: "..res.error))
+			return logger.err(errors.ReqlAuthError("Error: "..res.error))
 		end
 		for k,v in gmatch(res.authentication..',','([vV])=(.-),')do
 			auth[k] = v
 		end
 		if not auth.v then
-			return logger.err.format(errors.ReqlDriverError("Missing server signature"))
+			return logger.err(errors.ReqlDriverError("Missing server signature"))
 		end
 		local skHMAC = ssl.hmac.new('sha256', salted_password)
 		local server_key = skHMAC:final('Server Key', true)
@@ -126,16 +126,15 @@ function connect(options)
 		local server_signature = ssHMAC:final(auth_message, true)
 		if not compare_digest(auth.v, server_signature)then
 			socket.close()
-			return logger.err.format(errors.ReqlAuthError("Invalid server signature"))
+			return logger.err(errors.ReqlAuthError("Invalid server signature"))
 		end
-		logger.info.format(format("Connection to %s:%s complete.",addr,options.port))
+		logger.info(format("Connection to %s:%s complete.",addr,options.port))
 		coroutine.wrap(function()
 			for data in read do
-				p(data)
 				process(data)
 			end
 			socket.closed=true
-			logger.warn.format(format('Connection to %s:%s closed.',addr,options.port))
+			logger.warn(format('Connection to %s:%s closed.',addr,options.port))
 			if options.reconnect then
 				connect(opt)
 			end
@@ -144,7 +143,8 @@ function connect(options)
 	if checkCoroutine()then
 		connectToRethinkdb()
 	else
-		coroutine.wrap(connectToRethinkdb)()
+		logger.hErr('Cannot connect outside of coroutine currently. Sorry.')
+		--coroutine.wrap(connectToRethinkdb)()
 	end
 	options.password = '<HIDDEN>'
 	local conn = setmetatable({
@@ -152,7 +152,7 @@ function connect(options)
 		_getToken = new_token(),
 		_options = options,
 		close = function()
-			logger.info.format('Closing socket, cleaning up.')
+			logger.info('Closing socket, cleaning up.')
 			options.reconnect = false
 			socket.close()
 		end

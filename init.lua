@@ -1,6 +1,7 @@
 local connect = require('connect')
 local reql = require('Utils/reql.lua')
 local logger = require('Utils/logger.lua')
+local emitter = require('Utils/emitty.lua')
 
 -- Default options table || Do NOT edit, pass your options to the function instead
 
@@ -33,7 +34,7 @@ return {
 			options.address = options.address:sub(1,#options.address-1)
 		end
 		if not find(options.address, 'https?', 1) == 1 then
-			logger.warn.format('Procotol not supplied, defaulting to http://')
+			logger.warn('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
 		end
 		return connect(options)
@@ -41,5 +42,9 @@ return {
 
 	reql = function()
 		return reql()
-	end
+	end,
+	
+	emitter = emitter,
+	
+	logger = logger
 }
