@@ -174,7 +174,6 @@ local function encode(reql)
 			end
 		end
 	end
-	p(str)
 	str = '[1,' .. str .. ',{}]'
 	return str
 end
