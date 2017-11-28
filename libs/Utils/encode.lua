@@ -11,6 +11,137 @@ local queries = {
 	server_info = fmt('[%s]', query.SERVER_INFO)
 }
 
+local functions = {
+	function(n,_,data)
+		return fmt('[%s, ["%s"]]',term[n],f1)
+	end,
+	function(n,data,f1)
+		return fmt('[%s, [%s, "%s"]]',term[n],data,f1)
+	end,
+	function(n,data,f1)
+		return fmt('[%s, [%s, %s]]',term[n],data,f1)
+	end,
+	function(n,data)
+		return fmt('[%s, [%s]]',term[n],data)
+	end,
+}
+
+local index = {
+	'table',
+	'get',
+	'insert',
+	'update',
+	'replace',
+	'filter',
+	'changes',
+	'js',
+	'table_create',
+	'table_delete',
+	'table_list',
+	'db_create',
+	'db_delete',
+	'db_list',
+	'index_create',
+	'index_delete',
+	'index_list',
+	'delete',
+	'get_field',
+	'now',
+}
+
+local references = {
+	--[[database = {
+		f = functions[1],
+		t = term.db
+	},]]
+	table = {
+		f = functions[2],
+		t = term.table
+	},
+	get = {
+		f = functions[2],
+		t = term.get
+	},
+	insert = {
+		f = functions[3],
+		t = term.insert,
+		jsDatum = true
+	},
+	update = {
+		f = functions[3],
+		t = term.update,
+		jsDatum = true,
+		json = true,
+	},
+	replace = {
+		f = functions[3],
+		t = term.replace,
+		jsDatum = true,
+		json = true,
+	},
+	filter = {
+		f = functions[3],
+		t = term.filter,
+		json = true
+	},
+	changes = {
+		f = functions[1],
+		t = term.changes
+	},
+	js = {
+		f = functions[1],
+		t = term.changes
+	},
+	table_create = {
+		f = functions[2],
+		t = term.table_create
+	},
+	table_delete = {
+		f = functions[2],
+		t = term.table_delete
+	},
+	table_list = {
+		f = functions[4],
+		t = term.table_list,
+	},
+	db_create = {
+		f = functions[2],
+		t = term.db_create
+	},
+	db_delete = {
+		f = functions[2],
+		t = term.db_delete
+	},
+	db_list = {
+		f = functions[4],
+		t = term.db_list,
+	},
+	index_create = {
+		f = functions[2],
+		t = term.index_create
+	},
+	index_delete = {
+		f = functions[2],
+		t = term.index_delete
+	},
+	index_list = {
+		f = functions[4],
+		t = term.index_list,
+	},
+	delete = {
+		f = functions[4],
+		t = term.delete,
+	},
+	get_field = {
+		f = functions[2],
+		t = term.get_field
+	},
+	now = {
+		f = functions[4],
+		t = term.now
+	},
+}
+
 local function encode(reql)
 	if queries[reql.query] then
 		return queries[reql.query]
@@ -23,68 +154,27 @@ local function encode(reql)
 	if db then
 		str = str .. fmt('[%s, ["%s"]]', term.db, db)
 	end
-	local tab = reql._data.table
-	if tab then
-		str = fmt('[%s, [%s, "%s"]]', term.table, str, tab)
+	local js
+	for i=1,#index do
+		local v=index[i]
+		local dat=reql._data[v]
+		if dat then
+			local ref = references[v]
+			if ref then	
+				if ref.json == true then
+					if ref.jsDatum == true then
+						js = json.encode({term.datum, dat})
+					else
+						js = json.encode(dat)
+					end
+				else
+					js = dat
+				end
+				str = ref.f(v,str,js)
+			end
+		end
 	end
-	if reql._data.get then
-		str = fmt('[%s, [%s, "%s"]]', term.get, str, reql._data.get)
-	end
-	if reql._data.insert then
-		local js=json.encode({term.datum, reql._data.insert})
-		str = fmt('[%s, [%s, %s]]', term.insert, str, js)
-	end
-	if reql._data.replace then
-		local js=json.encode({term.datum, reql._data.replace})
-		str = fmt('[%s, [%s, %s]]', term.replace, str, js)
-	end
-	if reql._data.update then
-		local js=json.encode({term.datum, reql._data.update})
-		str = fmt('[%s, [%s, %s]]', term.update, str, js)
-	end
-	if reql._data.filter then
-		local js=json.encode(reql._data.filter)
-		str = fmt('[%s, [%s, %s]]', term.filter, str, js)
-	end
-	if reql._data.changes then
-		str = fmt('[%s, [%s]]', term.changes, str)
-	end
-	if reql._data.js then
-		str = fmt('[%s, ["%s"]]', term.js, reql._data.js)
-	end
-	if reql._data.table_create then
-		str = fmt('[%s, [%s, "%s"]]', term.table_create, reql._data.table_create)
-	end
-	if reql._data.table_drop then
-		str = fmt('[%s, [%s, "%s"]]', term.table_drop, reql._data.table_drop)
-	end
-	if reql._data.table_list then
-		str = fmt('[%s, [%s]]', term.table_list, str)
-	end
-	if reql._data.db_create then
-		str = fmt('[%s, [%s, "%s"]]', term.db_create, reql.data._db_create)
-	end
-	if reql._data.db_drop then
-		str = fmt('[%s, [%s, "%s"]]', term.db_drop, reql.data._db_drop)
-	end
-	if reql._data.db_list then
-		str = fmt('[%s, [%s]]', term.db_list, str)
-	end
-	if reql._data.delete then
-		str = fmt('[%s, [%s]]', term.delete, str)
-	end
-	if reql._data.index_create then
-		str = fmt('[%s, [%s, "%s"]]', term.index_create, reql._data.index_create)
-	end
-	if reql._data.index_drop then
-		str = fmt('[%s, [%s, "%s"]]', term.index_drop, reql._data.index_drop)
-	end
-	if reql._data.index_list then
-		str = fmt('[%s, [%s]]', term.index_list, str)
-	end
-	if reql._data.get_field then
-		str = fmt('[%s, [%s, "%s"]]', term.get_field, str, reql._data.get_field)
-	end
+	p(str)
 	str = '[1,' .. str .. ',{}]'
 	return str
 end

@@ -94,7 +94,7 @@ function newReql(conn)
 			reql.insert(tab)
 		else
 			local id=tab.id
-			tab.id=nil
+			--tab.id=nil
 			reql.get(id).replace(tab)
 		end
 		return reql
@@ -164,6 +164,7 @@ function newReql(conn)
 	function reql.dbList()
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.bypass = true
 		reql._data.usable = false
 		reql._data.db_list = true
 		return reql
@@ -198,6 +199,14 @@ function newReql(conn)
 		reql._data.table_list = true
 		return reql
 	end
+	function reql.now()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.bypass = true
+		reql._data.usable = false
+		reql._data.now = true
+		return reql
+	end
 	function reql.run(tab, callback)
 		if type(tab) == 'function'then
 			callback = tab
@@ -208,7 +217,7 @@ function newReql(conn)
 		reql.conn=reql.conn or tab.conn
 		assert(reql.conn ~= nil, 'No connection passed to reql.run()')
 		assert(not reql.conn._socket.closed, 'Socket closed. Cannot run.')
-		reql._data.database = reql._data.database or tab.db or reql.conn._options.db or nil
+		reql._data.database = (not reql._data.bypass and(reql._data.database or tab.db or reql.conn._options.db or nil))
 		reql._data.table = reql._data.table or tab.table or nil
 		reql._data.raw = tab.raw
 		local token = reql.conn._getToken()
@@ -218,7 +227,7 @@ function newReql(conn)
 				cmanager:resume(token,...)
 			end
 		end
-		assert(type(x)=='function', 'bad argument #2 to reql.run, function expected, got ' .. type(x))
+		assert(type(x)=='function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))
 		processQuery(reql, token, x)
 		reql.ran = not reql.conn._options.reusable
 		for i in pairs(reql._data)do
