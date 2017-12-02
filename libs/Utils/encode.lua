@@ -155,9 +155,9 @@ local function encode(reql)
 		str = str .. fmt('[%s, ["%s"]]', term.db, db)
 	end
 	local js
-	for i=1,#index do
-		local v=index[i]
-		local dat=reql._data[v]
+	for i = 1, #index do
+		local v = index[i]
+		local dat = reql._data[v]
 		if dat then
 			local ref = references[v]
 			if ref then	
@@ -170,7 +170,7 @@ local function encode(reql)
 				else
 					js = dat
 				end
-				str = ref.f(v,str,js)
+				str = ref.f(v, str, js)
 			end
 		end
 	end

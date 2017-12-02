@@ -1,5 +1,5 @@
-local ssl=require('openssl')
-local x=require('./bits.lua')
+local ssl = require('openssl')
+local x = require('./bits.lua')
 
 local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
 local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
@@ -12,7 +12,7 @@ local function pbkdf(digest, password, salt, iteration, dkLen)
 	end
 
 	local hLen = len(PRF('', ''))
-	if dkLen > (2^32 - 1) * hLen then
+	if dkLen > (2 ^ 32 - 1) * hLen then
 		return nil, 'derived key too long'
 	end
 
