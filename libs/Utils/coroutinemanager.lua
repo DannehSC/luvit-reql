@@ -12,7 +12,7 @@ end
 function manager:yield(id)
 	if not manager:isCoro() then return end
 	local thread = coroutine.running()
-	manager.threads[id]=thread
+	manager.threads[id] = thread
 	return coroutine.yield()
 end
 

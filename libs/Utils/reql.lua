@@ -40,7 +40,7 @@ function newReql(conn)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql._data.insert = reql._data.insert or {}
-		for i, v in pairs(tab)do
+		for i, v in pairs(tab) do
 			reql._data.insert[i] = v
 		end
 		return reql
@@ -58,7 +58,7 @@ function newReql(conn)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql._data.replace = reql._data.replace or {}
-		for i, v in pairs(tab)do
+		for i, v in pairs(tab) do
 			reql._data.replace[i] = v
 		end
 		return reql
@@ -68,8 +68,8 @@ function newReql(conn)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql._data.update = reql._data.update or {}
-		for i,v in pairs(tab)do
-			reql._data.update[i]=v
+		for i,v in pairs(tab) do
+			reql._data.update[i] = v
 		end
 		return reql
 	end
@@ -89,11 +89,11 @@ function newReql(conn)
 		assert(not reql.ran, 'ReQL instance already ran.')
 		assert(tab.id ~= nil, 'argument \'id\' not passed to inOrRe')
 		assert(cmanager:isCoro(), 'reql.inOrRe not ran in coroutine.')
-		local exists=newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({raw=true})
-		if exists==nil then
+		local exists = newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({ raw = true })
+		if exists == nil then
 			reql.insert(tab)
 		else
-			local id=tab.id
+			local id = tab.id
 			--tab.id=nil
 			reql.get(id).replace(tab)
 		end
@@ -105,7 +105,7 @@ function newReql(conn)
 		assert(not reql.ran, 'ReQL instance already ran.')
 		assert(tab.id ~= nil, 'argument \'id\' not passed to inOrUp')
 		assert(cmanager:isCoro(), 'reql.inOrUp not ran in coroutine.')
-		local exists=newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({raw=true})
+		local exists = newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({ raw = true })
 		if exists == nil then
 			reql.insert(tab)
 		else
@@ -158,7 +158,7 @@ function newReql(conn)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql._data.usable = false
-		reql._data.db_drop=name
+		reql._data.db_drop = name
 		return reql
 	end
 	function reql.dbList()
@@ -214,31 +214,31 @@ function newReql(conn)
 		end
 		tab= tab or {}
 		assert(not reql.ran, 'ReQL instance already ran.')
-		reql.conn=reql.conn or tab.conn
+		reql.conn = reql.conn or tab.conn
 		assert(reql.conn ~= nil, 'No connection passed to reql.run()')
 		assert(not reql.conn._socket.closed, 'Socket closed. Cannot run.')
-		reql._data.database = (not reql._data.bypass and(reql._data.database or tab.db or reql.conn._options.db or nil))
+		reql._data.database = (not reql._data.bypass and (reql._data.database or tab.db or reql.conn._options.db or nil))
 		reql._data.table = reql._data.table or tab.table or nil
 		reql._data.raw = tab.raw
 		local token = reql.conn._getToken()
-		local x, is =callback, cmanager:isCoro()
+		local x, is = callback, cmanager:isCoro()
 		if is and not reql._data.changes then
 			x = function(...)
 				cmanager:resume(token,...)
 			end
 		end
-		assert(type(x)=='function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))
+		assert(type(x) == 'function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))
 		processQuery(reql, token, x)
 		reql.ran = not reql.conn._options.reusable
-		for i in pairs(reql._data)do
+		for i in pairs(reql._data) do
 			reql._data[i] = nil
 		end
 		if is then
 			return cmanager:yield(token)
 		end
 	end
-	for _, v in pairs({'continue', 'stop', 'noreplywait', 'server_info'})do
-		reql[v]=function()
+	for _, v in pairs({ 'continue', 'stop', 'noreplywait', 'server_info' })do
+		reql[v] = function()
 			assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 			reql._data.usable = false
 			reql.query = v

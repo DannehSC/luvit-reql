@@ -5,9 +5,9 @@ local errors = require('../error.lua')
 -- local cmanager = require('./coroutinemanager.lua')
 
 local errcodes = {
-	[16] = {t = 'CLIENT_ERROR',f = errors.ReqlDriverError},
-	[17] = {t = 'COMPILE_ERROR',f = errors.ReqlCompileError},
-	[18] = {t = 'RUNTIME_ERROR',f = errors.ReqlRuntimeError},
+	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },
+	[17] = { t = 'COMPILE_ERROR', f = errors.ReqlCompileError },
+	[18] = { t = 'RUNTIME_ERROR', f = errors.ReqlRuntimeError },
 }
 local processor = {
 	cbs = {},
@@ -15,7 +15,7 @@ local processor = {
 
 local buffers = {}
 local function newBuffer(tx)
-	local buffer = {data = tx}
+	local buffer = { data = tx }
 	function buffer:add(tx)
 		buffer.data = buffer.data .. tx
 	end
@@ -36,16 +36,16 @@ function processor.processData(data)
 		if not todat then return end
 		if todat.raw then
 			dat = rest
-			if dat:find('%"r%"%:%[null%]')then
+			if dat:find('%"r%"%:%[null%]') then
 				dat = nil
 			end
 		else
-			local theresp=json.decode(rest)
+			local theresp = json.decode(rest)
 			if theresp then
-				dat=theresp.r
+				dat = theresp.r
 			else
 				logger.warn(string.format('Bad JSON: %s', rest))
-				dat=rest
+				dat = rest
 			end
 		end
 		todat.f(dat)
@@ -62,17 +62,17 @@ function processor.processData(data)
 		local todat = processor.cbs[token]
 		if not todat then return end
 		if todat.raw then
-			dat=buffer.data
-			if dat:find('%"r%"%:%[null%]')then
+			dat = buffer.data
+			if dat:find('%"r%"%:%[null%]') then
 				dat = nil
 			end
 		else
-			local theresp=json.decode(buffer.data)
+			local theresp = json.decode(buffer.data)
 			if theresp then
-				dat=theresp.r
+				dat = theresp.r
 			else
-				logger.warn(string.format('Bad JSON: %s',buffer.data))
-				dat=buffer.data
+				logger.warn(string.format('Bad JSON: %s', buffer.data))
+				dat = buffer.data
 			end
 		end
 		todat.f(dat)

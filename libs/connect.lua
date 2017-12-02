@@ -1,14 +1,14 @@
-local json=require('json')
-local ssl=require('openssl')
-local net=require('coro-net')
-local errors=require('./error.lua')
-local x=require('./Utils/bits.lua')
-local reql=require('./Utils/reql.lua')
-local pbkdf=require('./Utils/pbkdf.lua')
-local logger=require('./Utils/logger.lua')
-local compare_digest=require('./Utils/compare.lua')
-local cmanager=require('./Utils/coroutinemanager.lua')
-local process=require('./Utils/processor.lua').processData
+local json = require('json')
+local ssl = require('openssl')
+local net = require('coro-net')
+local errors = require('./error.lua')
+local x = require('./Utils/bits.lua')
+local reql = require('./Utils/reql.lua')
+local pbkdf = require('./Utils/pbkdf.lua')
+local logger = require('./Utils/logger.lua')
+local compare_digest = require('./Utils/compare.lua')
+local cmanager = require('./Utils/coroutinemanager.lua')
+local process = require('./Utils/processor.lua').processData
 
 local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
 
@@ -23,21 +23,23 @@ local function new_token()
 	end
 	return get_token
 end
+
 local function copy(t)
 	local n = {}
-	for k, v in pairs(t)do
+	for k, v in pairs(t) do
 		n[k] = v
 	end
 	return n
 end
+
 local connect
 function connect(options)
 	local socket = {
 		closed = false
 	}
 	local addr = options.address
-	addr = addr:gsub('https://','')
-	addr = addr:gsub('http://','')
+	addr = addr:gsub('https://', '')
+	addr = addr:gsub('http://', '')
 	local tls = options.address:sub(1, 5) == 'https' -- NOTE: unused variable
 	local function connectToRethinkdb()
 		local opt = copy(options)
@@ -47,7 +49,7 @@ function connect(options)
 		})}
 		logger.info(format('Connecting to %s:%s', addr, options.port))
 		local read, write, close = stuff[1], stuff[2], stuff[6]
-		if type(write) == "string"then
+		if type(write) == "string" then
 			socket.closed = true
 			return logger.err("Socket", write)
 		end
@@ -71,20 +73,20 @@ function connect(options)
 		write(json.encode {
 			protocol_version = 0,
 			authentication_method = "SCRAM-SHA-256",
-			authentication = 'n,,'.. client_first_message
-		}..'\0')
+			authentication = 'n,,' .. client_first_message
+		} .. '\0')
 		-- Second Server Challenge
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
-			return logger.err(errors.ReqlAuthError("Error: "..res.error))
+			return logger.err(errors.ReqlAuthError("Error: " .. res.error))
 		end
 		local auth = {}
 		local server_first_message = res.authentication
 		for k, v in gmatch(server_first_message .. ',', '([rsi])=(.-),') do
 			auth[k] = v
 		end
-		local i, j = auth.r:find(nonce,1,true)
+		local i, j = auth.r:find(nonce, 1, true)
 		assert(i == 1 and j == #nonce,errors.ReqlDriverError('Invalid Nonce'))
 		auth.i = tonumber(auth.i)
 		local client_final_message = 'c=biws,r=' .. auth.r
@@ -94,27 +96,27 @@ function connect(options)
 			socket.close()
 			return logger.err(errors.ReqlDriverError("Salt error"))
 		end
-		local ckHMAC = ssl.hmac.new('sha256',salted_password)
+		local ckHMAC = ssl.hmac.new('sha256', salted_password)
 		local client_key = ckHMAC:final('Client Key', true)
 		local stored_key = ssl.digest.digest('sha256', client_key, true)
-		local auth_message = concat({client_first_message,server_first_message,client_final_message},',')
+		local auth_message = concat({ client_first_message, server_first_message, client_final_message }, ',')
 		local csHMAC = ssl.hmac.new('sha256', stored_key)
 		local client_signature = csHMAC:final(auth_message, true)
 		local client_proof = bxor256(client_key, client_signature)
 		-- Third Client Message
 		write(json.encode {
-			authentication = concat{client_final_message,',p=', ssl.base64(client_proof,true)}
-		}..'\0')
+			authentication = concat{ client_final_message, ',p=', ssl.base64(client_proof, true) }
+		} .. '\0')
 		-- Third Server Challenge
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
 			if options.debug then
-				p('DEBUG',res.error)
+				p('DEBUG', res.error)
 			end
-			return logger.err(errors.ReqlAuthError("Error: "..res.error))
+			return logger.err(errors.ReqlAuthError("Error: " .. res.error))
 		end
-		for k,v in gmatch(res.authentication..',','([vV])=(.-),')do
+		for k,v in gmatch(res.authentication .. ',', '([vV])=(.-),')do
 			auth[k] = v
 		end
 		if not auth.v then
@@ -128,19 +130,19 @@ function connect(options)
 			socket.close()
 			return logger.err(errors.ReqlAuthError("Invalid server signature"))
 		end
-		logger.info(format("Connection to %s:%s complete.",addr,options.port))
+		logger.info(format("Connection to %s:%s complete.", addr, options.port))
 		coroutine.wrap(function()
 			for data in read do
 				process(data)
 			end
-			socket.closed=true
-			logger.warn(format('Connection to %s:%s closed.',addr,options.port))
+			socket.closed = true
+			logger.warn(format('Connection to %s:%s closed.', addr, options.port))
 			if options.reconnect then
 				connect(opt)
 			end
 		end)()
 	end
-	if checkCoroutine()then
+	if checkCoroutine() then
 		connectToRethinkdb()
 	else
 		logger.hErr('Cannot connect outside of coroutine currently. Sorry.')
