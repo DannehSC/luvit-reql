@@ -40,12 +40,16 @@ function processor.processData(data)
 				dat = nil
 			end
 		else
-			local theresp = json.decode(rest)
-			if theresp then
-				dat = theresp.r
+			if rest:find('%"r%"%:%[null%]') then
+				dat = nil
 			else
-				logger.warn(string.format('Bad JSON: %s', rest))
-				dat = rest
+				local theresp = json.decode(rest)
+				if theresp then
+					dat = theresp.r
+				else
+					logger.warn(string.format('Bad JSON: %s', rest))
+					dat = rest
+				end
 			end
 		end
 		todat.f(dat)
