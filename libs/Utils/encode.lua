@@ -65,7 +65,8 @@ local references = {
 	insert = {
 		f = functions[3],
 		t = term.insert,
-		jsDatum = true
+		jsDatum = true,
+		json = true,
 	},
 	update = {
 		f = functions[3],

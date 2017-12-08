@@ -7,7 +7,7 @@ function newReql(conn)
 	local reql = {
 		ran = false,
 		_data = {
-			usable=true
+			usable = true
 		}
 	}
 	if conn then reql.conn = conn end
@@ -89,7 +89,7 @@ function newReql(conn)
 		assert(not reql.ran, 'ReQL instance already ran.')
 		assert(tab.id ~= nil, 'argument \'id\' not passed to inOrRe')
 		assert(cmanager:isCoro(), 'reql.inOrRe not ran in coroutine.')
-		local exists = newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({ raw = true })
+		local exists = newReql(conn).db(reql._data.database or reql.conn._options.db).table(reql._data.table).get(tab.id).run({ raw = true })
 		if exists == nil then
 			reql.insert(tab)
 		else
@@ -105,7 +105,7 @@ function newReql(conn)
 		assert(not reql.ran, 'ReQL instance already ran.')
 		assert(tab.id ~= nil, 'argument \'id\' not passed to inOrUp')
 		assert(cmanager:isCoro(), 'reql.inOrUp not ran in coroutine.')
-		local exists = newReql(conn).db(reql._data.database).table(reql._data.table).get(tab.id).run({ raw = true })
+		local exists = newReql(conn).db(reql._data.database or reql.conn._options.db).table(reql._data.table).get(tab.id).run({ raw = true })
 		if exists == nil then
 			reql.insert(tab)
 		else
