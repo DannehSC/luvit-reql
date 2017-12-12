@@ -51,7 +51,7 @@ function connect(options)
 		local read, write, close = stuff[1], stuff[2], stuff[6]
 		if type(write) == "string" then
 			socket.closed = true
-			return logger.err("Socket", write)
+			return logger.err("Socket error | "..write)
 		end
 		socket.read = read
 		socket.write = write
@@ -131,6 +131,7 @@ function connect(options)
 			return logger.err(errors.ReqlAuthError("Invalid server signature"))
 		end
 		logger.info(format("Connection to %s:%s complete.", addr, options.port))
+		socket.closed = false
 		coroutine.wrap(function()
 			for data in read do
 				process(data)
@@ -149,7 +150,7 @@ function connect(options)
 		--coroutine.wrap(connectToRethinkdb)()
 	end
 	options.password = '<HIDDEN>'
-	local conn = setmetatable({
+	local conn = {
 		_socket = socket,
 		_getToken = new_token(),
 		_options = options,
@@ -157,8 +158,11 @@ function connect(options)
 			logger.info('Closing socket, cleaning up.')
 			options.reconnect = false
 			socket.close()
+		end,
+		connected = function()
+			return not socket.closed
 		end
-	},{})
+	}
 	conn.reql = function()
 		return reql(conn)
 	end

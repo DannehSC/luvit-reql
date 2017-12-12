@@ -25,8 +25,8 @@ end
 local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1,8))
-	local length = int(data:sub(9,12)) -- NOTE: unused variable
-	local resp = data:sub(13) -- NOTE: unused variable
+	--local length = int(data:sub(9,12)) -- NOTE: unused variable
+	--local resp = data:sub(13) -- NOTE: unused variable
 	local t, respn = data:sub(13):match('([t])":(%d?%d)') -- NOTE: unused variable
 	respn = tonumber(respn)
 	if respn == 1 then
@@ -46,6 +46,9 @@ function processor.processData(data)
 				local theresp = json.decode(rest)
 				if theresp then
 					dat = theresp.r
+					if todat.getterWetter then
+						dat = dat[1]
+					end
 				else
 					logger.warn(string.format('Bad JSON: %s', rest))
 					dat = rest
@@ -74,6 +77,9 @@ function processor.processData(data)
 			local theresp = json.decode(buffer.data)
 			if theresp then
 				dat = theresp.r
+				if todat.getterWetter then
+					dat = dat[1]
+				end
 			else
 				logger.warn(string.format('Bad JSON: %s', buffer.data))
 				dat = buffer.data
@@ -100,6 +106,8 @@ function processor.processData(data)
 		end
 	else
 		logger.warn(string.format('Unknown response: %s', respn))
+		processor.cbs[token].f(nil, 'Unknown response',data:sub(13))
+		processor.cbs[token] = nil
 	end
 end
 return processor
