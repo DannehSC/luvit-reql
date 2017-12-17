@@ -70,7 +70,7 @@ function processor.processData(data)
 		if not todat then return end
 		if todat.raw then
 			dat = buffer.data
-			if dat:find('%\'r%\'%:%[null%]') then
+			if dat:find("%'r%'%:%[null%]") then
 				dat = nil
 			end
 		else
