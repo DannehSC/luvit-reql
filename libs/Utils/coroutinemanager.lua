@@ -1,4 +1,3 @@
--- local emitter = require('./emitty.lua')
 
 local manager = {
 	threads = {}

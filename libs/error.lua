@@ -1,3 +1,4 @@
+
 local ReqlError = {}
 
 local hierarchy = {
@@ -33,6 +34,7 @@ function ReqlError.__index(_, index)
 			term = term,
 			frames = frames
 		}, errMeta)
+		
 		function err:init()
 			local h = ''
 			local last = self.name

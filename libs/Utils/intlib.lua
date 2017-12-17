@@ -1,3 +1,4 @@
+
 return {
 	byte_to_int = function(str)
 		local n = 0
