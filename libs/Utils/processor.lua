@@ -27,7 +27,7 @@ local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1,8))
 
-	local t, respn = data:sub(13):match('([t])\':(%d?%d)') -- NOTE: unused variable
+	local t, respn = data:sub(13):match("([t])':(%d?%d)") -- NOTE: unused variable
 	respn = tonumber(respn)
 	if respn == 1 then
 		local rest = data:sub(13)
@@ -36,11 +36,11 @@ function processor.processData(data)
 		if not todat then return end
 		if todat.raw then
 			dat = rest
-			if dat:find('%\'r%\'%:%[null%]') then
+			if dat:find("%'r%'%:%[null%]") then
 				dat = nil
 			end
 		else
-			if rest:find('%\'r%\'%:%[null%]') then
+			if rest:find("%'r%'%:%[null%]") then
 				dat = nil
 			else
 				local theresp = json.decode(rest)
