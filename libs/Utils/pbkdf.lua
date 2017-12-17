@@ -1,7 +1,8 @@
-local ssl = require('openssl')
-local x = require('./bits.lua')
 
-local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
+local ssl = require('openssl')
+local bits = require('./bits.lua')
+
+local xor = bits.xor
 local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
 local fmod, concat = math.fmod, table.concat
 
