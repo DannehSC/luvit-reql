@@ -110,7 +110,7 @@ local references = {
 		t = term.table_delete
 	},
 	table_list = {
-		f = functions[5],
+		f = functions[4],
 		t = term.table_list,
 	},
 	db_create = {
@@ -122,7 +122,7 @@ local references = {
 		t = term.db_delete
 	},
 	db_list = {
-		f = functions[5],
+		f = functions[4],
 		t = term.db_list,
 	},
 	index_create = {
@@ -134,11 +134,11 @@ local references = {
 		t = term.index_delete
 	},
 	index_list = {
-		f = functions[5],
+		f = functions[4],
 		t = term.index_list,
 	},
 	delete = {
-		f = functions[5],
+		f = functions[4],
 		t = term.delete,
 	},
 	get_field = {
@@ -146,7 +146,7 @@ local references = {
 		t = term.get_field
 	},
 	now = {
-		f = functions[5],
+		f = functions[4],
 		t = term.now
 	},
 }
