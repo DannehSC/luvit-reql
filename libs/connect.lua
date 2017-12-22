@@ -11,7 +11,7 @@ local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
 local process = require('./Utils/processor.lua').processData
 
-local bxor256 = bits.bxor256
+local bxor256 = bits.bxor
 
 local concat, gmatch, format = table.concat, string.gmatch, string.format
 local checkCoroutine = cmanager.isCoro
@@ -41,7 +41,6 @@ function connect(options)
 	local addr = options.address
 	addr = addr:gsub('https://', '')
 	addr = addr:gsub('http://', '')
-	local tls = options.address:sub(1, 5) == 'https' -- NOTE: unused variable
 	local function connectToRethinkdb()
 		local opt = copy(options)
 		local stuff = {net.connect({ host = addr, port = options.port })}
