@@ -28,7 +28,7 @@ local functions = {
 	end,
 	function(n, _, data)
 		return fmt('[%s, [%s]]', term[n], data)
-	end,
+	end
 }
 
 local index = {
