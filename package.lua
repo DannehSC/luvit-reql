@@ -1,3 +1,4 @@
+
 return {
     name = "DannehSC/luvit-reql",
     version = "1.0.01",
@@ -12,7 +13,7 @@ return {
 		'creationix/coro-net'
 	},
     files = {
-      "**.lua",
-      "!test*"
+		"**.lua",
+		"!test*"
     }
 }
