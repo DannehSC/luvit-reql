@@ -1,11 +1,17 @@
 local ssl = require('openssl')
+local timer = require('timer')
+local cmanager = require('./coroutinemanager.lua')
 
 local emitter = {
 	callbacks = {}
 }
 
+local function getId()
+	return ssl.base64(ssl.random(20), true)
+end
+
 function emitter:on(event, callback)
-	local id = ssl.base64(ssl.random(20), true)
+	local id = getId()
 	emitter.callbacks[id] = {
 		event = event,
 		callback = callback,
@@ -19,6 +25,7 @@ function emitter:once(event, callback)
 		emitter:del(id)
 		callback(...)
 	end)
+	return id
 end
 
 function emitter:del(id)
@@ -33,6 +40,23 @@ function emitter:fire(event,...)
 			v.callback(...)
 		end
 	end
+end
+
+function emitter:waitFor(event,timeout)
+	local id = getId()
+	local eid
+	if timeout then
+		coroutine.wrap(function()
+			timer.setTimeout(timeout,function()
+				eid:del(id)
+				cmanager:resume(id)
+			end)
+		end)()
+	end
+	eid = emitter:once(event,function()
+		cmanager:resume(id)
+	end)
+	return cmanager:yield(id)
 end
 
 return emitter

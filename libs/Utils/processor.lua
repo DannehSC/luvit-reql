@@ -106,7 +106,12 @@ function processor.processData(data)
 		end
 	else
 		logger.warn(string.format('Unknown response: %s', respn))
-		processor.cbs[token].f(nil, 'Unknown response',data:sub(13))
+		if not data then
+			data = 'no data?'
+		else
+			data = data:sub(13)
+		end
+		processor.cbs[token].f(nil, 'Unknown response',data)
 		processor.cbs[token] = nil
 	end
 end

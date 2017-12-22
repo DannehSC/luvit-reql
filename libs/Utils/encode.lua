@@ -13,7 +13,7 @@ local queries = {
 
 local functions = {
 	function(n,_,data)
-		return fmt('[%s, ["%s"]]',term[n],f1)
+		return fmt('[%s, ["%s"]]',term[n],data)
 	end,
 	function(n,data,f1)
 		return fmt('[%s, [%s, "%s"]]',term[n],data,f1)
@@ -24,12 +24,16 @@ local functions = {
 	function(n,data)
 		return fmt('[%s, [%s]]',term[n],data)
 	end,
+	function(n,_,data)
+		return fmt('[%s, [%s]]',term[n],data)
+	end,
 }
 
 local index = {
 	'table',
 	'get',
 	'insert',
+	'config',
 	'update',
 	'replace',
 	'filter',
@@ -61,6 +65,10 @@ local references = {
 	get = {
 		f = functions[2],
 		t = term.get
+	},
+	config = {
+		f = functions[4],
+		t = term.config,
 	},
 	insert = {
 		f = functions[3],
@@ -102,7 +110,7 @@ local references = {
 		t = term.table_delete
 	},
 	table_list = {
-		f = functions[4],
+		f = functions[5],
 		t = term.table_list,
 	},
 	db_create = {
@@ -114,7 +122,7 @@ local references = {
 		t = term.db_delete
 	},
 	db_list = {
-		f = functions[4],
+		f = functions[5],
 		t = term.db_list,
 	},
 	index_create = {
@@ -126,11 +134,11 @@ local references = {
 		t = term.index_delete
 	},
 	index_list = {
-		f = functions[4],
+		f = functions[5],
 		t = term.index_list,
 	},
 	delete = {
-		f = functions[4],
+		f = functions[5],
 		t = term.delete,
 	},
 	get_field = {
@@ -138,7 +146,7 @@ local references = {
 		t = term.get_field
 	},
 	now = {
-		f = functions[4],
+		f = functions[5],
 		t = term.now
 	},
 }
@@ -161,7 +169,7 @@ local function encode(reql)
 		local dat = reql._data[v]
 		if dat then
 			local ref = references[v]
-			if ref then	
+			if ref then
 				if ref.json == true then
 					if ref.jsDatum == true then
 						js = json.encode({term.datum, dat})

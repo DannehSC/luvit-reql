@@ -6,6 +6,7 @@ local x = require('./Utils/bits.lua')
 local reql = require('./Utils/reql.lua')
 local pbkdf = require('./Utils/pbkdf.lua')
 local logger = require('./Utils/logger.lua')
+local emitter = require('./Utils/emitty.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
 local process = require('./Utils/processor.lua').processData
@@ -58,6 +59,7 @@ function connect(options)
 		socket.close = function()
 			socket.closed = true
 			close()
+			emitter:fire('quit')
 		end
 		local user, auth_key = options.user, options.password
 		-- Initiation (First Client Message/First Server Challenge)
@@ -132,6 +134,7 @@ function connect(options)
 		end
 		logger.info(format("Connection to %s:%s complete.", addr, options.port))
 		socket.closed = false
+		emitter:fire('connected')
 		coroutine.wrap(function()
 			for data in read do
 				process(data)
