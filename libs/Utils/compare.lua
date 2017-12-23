@@ -1,5 +1,5 @@
 
-local bit = require('bit')
+local bit = require('./bits.lua')
 
 local len, byte = string.len, string.byte
 local max = math.max
