@@ -12,7 +12,7 @@ local function getId()
 end
 
 function emitter:on(event, callback)
-	local id = ssl.base64(ssl.random(20), true)
+	local id = getId()
 	emitter.callbacks[id] = {
 		event = event,
 		callback = callback,
