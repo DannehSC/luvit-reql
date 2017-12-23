@@ -19,6 +19,6 @@ local function bxor256(u, t)
 end
 
 return {
-	xor = xor, 
-	bxor = bxor256
+	OR = xor, 
+	XOR = bxor256
 }

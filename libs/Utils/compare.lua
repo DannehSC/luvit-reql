@@ -3,7 +3,7 @@ local bit = require('./bits.lua')
 
 local len, byte = string.len, string.byte
 local max = math.max
-local xor, bxor = bit.xor, bit.bxor
+local xor, bxor = bit.OR, bit.XOR
 
 local function compare_digest(a, b)
 	local result

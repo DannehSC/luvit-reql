@@ -2,7 +2,7 @@
 local ssl = require('openssl')
 local bits = require('./bits.lua')
 
-local xor = bits.xor
+local xor = bits.OR
 local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
 local fmod, concat = math.fmod, table.concat
 
