@@ -55,8 +55,8 @@ local index = {
 }
 
 local references = {
-	table = 		{ f = functions[2], t = term.table 			}, 
-	get = 			{ f = functions[2], t = term.get 			},
+	table = 		{ f = functions[2], t = term.table 		}, 
+	get = 			{ f = functions[2], t = term.get 		},
 	config = 		{ f = functions[4], t = term.config 		},
 	insert = 		{ f = functions[3], t = term.insert, 		jsDatum = true, 	json = true }, 
 	update = 		{ f = functions[3], t = term.update, 		jsDatum = true, 	json = true }, 
@@ -64,18 +64,18 @@ local references = {
 	filter = 		{ f = functions[3], t = term.filter, 		json = true   }, 
 	changes = 		{ f = functions[1], t = term.changes 		}, 
 	js = 			{ f = functions[1], t = term.changes 		}, 
-	table_create = 	{ f = functions[2], t = term.table_create 	}, 
-	table_delete = 	{ f = functions[2], t = term.table_delete 	}, 
-	table_list = 	{ f = functions[4], t = term.table_list 	}, 
-	db_create = 	{ f = functions[2], t = term.db_create 		}, 
-	db_delete = 	{ f = functions[2], t = term.db_delete 		},
+	table_create = 		{ f = functions[2], t = term.table_create 	}, 
+	table_delete = 		{ f = functions[2], t = term.table_delete 	}, 
+	table_list = 		{ f = functions[4], t = term.table_list 	}, 
+	db_create = 		{ f = functions[2], t = term.db_create 		}, 
+	db_delete = 		{ f = functions[2], t = term.db_delete 		},
 	db_list = 		{ f = functions[4], t = term.db_list 		}, 
-	index_create = 	{ f = functions[2], t = term.index_create 	}, 
-	index_delete = 	{ f = functions[2], t = term.index_delete 	}, 
-	index_list = 	{ f = functions[4], t = term.index_list 	}, 
+	index_create = 		{ f = functions[2], t = term.index_create 	}, 
+	index_delete = 		{ f = functions[2], t = term.index_delete 	}, 
+	index_list = 		{ f = functions[4], t = term.index_list 	}, 
 	delete = 		{ f = functions[4], t = term.delete 		}, 
-	get_field = 	{ f = functions[2], t = term.get_field 		}, 
-	now = 			{ f = functions[4], t = term.now 			} 
+	get_field = 		{ f = functions[2], t = term.get_field 		}, 
+	now = 			{ f = functions[4], t = term.now 		} 
 }
 
 local function encode(reql)
