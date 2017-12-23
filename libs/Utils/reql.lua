@@ -69,7 +69,9 @@ function newReql(conn)
 	function reql.config()
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
+
 		reql._data.config = true
+		
 		return reql
 	end
 	function reql.replace(tab)
@@ -280,7 +282,7 @@ function newReql(conn)
 		local x, is = callback, cmanager:isCoro()
 		if is and not reql._data.changes then
 			x = function(...)
-				cmanager:resume(token,...)
+				cmanager:resume(token, ...)
 			end
 		end
 

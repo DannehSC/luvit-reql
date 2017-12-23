@@ -15,10 +15,10 @@ local queries = {
 
 local functions = {
 	function(n, _, data)
-		return fmt('[%s, ['%s']]', term[n], data)
+		return fmt('[%s, ["%s"]]', term[n], data)
 	end,
 	function(n, data, f1)
-		return fmt('[%s, [%s, '%s']]', term[n], data, f1)
+		return fmt('[%s, [%s, "%s"]]', term[n], data, f1)
 	end,
 	function(n, data, f1)
 		return fmt('[%s, [%s, %s]]', term[n], data, f1)
@@ -91,7 +91,7 @@ local function encode(reql)
 	local str = ''
 	local db = reql._data.database
 	if db then
-		str = str .. fmt('[%s, [\'%s\']]', term.db, db)
+		str = str .. fmt('[%s, ["%s"]]', term.db, db)
 	end
 
 	local js
