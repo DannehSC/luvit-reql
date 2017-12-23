@@ -46,8 +46,7 @@ function logger.hErr.format(sig, err)
 end
 
 function logger.warn.format(sig, dat)
-	sig = sig or '?
-	'
+	sig = sig or '?'
 	print(date(pat) .. ' | ' .. fmt(colorize('number', '[WARN]    ') .. '| %s', sig))
 	if dat then
 		print('logger.warn.format: 2nd value deprecated.\nData: ' .. dat)
