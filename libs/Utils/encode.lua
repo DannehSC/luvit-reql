@@ -35,6 +35,7 @@ local index = {
 	'table',
 	'get',
 	'insert',
+	'config',
 	'update',
 	'replace',
 	'filter',
