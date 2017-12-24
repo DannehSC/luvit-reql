@@ -63,7 +63,7 @@ local references = {
 	update = 		{ f = functions[3], t = term.update, 		jsDatum = true, 	json = true }, 
 	replace = 		{ f = functions[3], t = term.replace, 		jsDatum = true, 	json = true }, 
 	filter = 		{ f = functions[3], t = term.filter, 		json = true   }, 
-	changes = 		{ f = functions[1], t = term.changes 		}, 
+	changes = 		{ f = functions[4], t = term.changes 		}, 
 	js = 			{ f = functions[1], t = term.changes 		}, 
 	table_create = 		{ f = functions[2], t = term.table_create 	}, 
 	table_delete = 		{ f = functions[2], t = term.table_delete 	}, 

@@ -1,9 +1,9 @@
 
-local bit = require('./bits.lua')
+local bit = require('bit')
 
 local len, byte = string.len, string.byte
 local max = math.max
-local xor, bxor = bit.OR, bit.XOR
+local xor, bxor = bit.bor, bit.bxor
 
 local function compare_digest(a, b)
 	local result

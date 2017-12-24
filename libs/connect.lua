@@ -7,11 +7,12 @@ local bits = require('./Utils/bits.lua')
 local reql = require('./Utils/reql.lua')
 local pbkdf = require('./Utils/pbkdf.lua')
 local emitter = require('./Utils/emitter.lua')
+local logger = require('./Utils/logger.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
 local process = require('./Utils/processor.lua').processData
 
-local bxor256 = bits.bxor
+local bxor256 = bits.XOR
 
 local concat, gmatch, format = table.concat, string.gmatch, string.format
 local checkCoroutine = cmanager.isCoro
