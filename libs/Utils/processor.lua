@@ -1,14 +1,15 @@
+
 local json = require('json')
 local intlib = require('./intlib.lua')
 local logger = require('./logger.lua')
 local errors = require('../error.lua')
--- local cmanager = require('./coroutinemanager.lua')
 
 local errcodes = {
 	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },
 	[17] = { t = 'COMPILE_ERROR', f = errors.ReqlCompileError },
 	[18] = { t = 'RUNTIME_ERROR', f = errors.ReqlRuntimeError },
 }
+
 local processor = {
 	cbs = {},
 }
@@ -25,9 +26,8 @@ end
 local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1,8))
-	--local length = int(data:sub(9,12)) -- NOTE: unused variable
-	--local resp = data:sub(13) -- NOTE: unused variable
-	local t, respn = data:sub(13):match('([t])":(%d?%d)') -- NOTE: unused variable
+
+	local _, respn = data:sub(13):match('([t])":(%d?%d)')
 	respn = tonumber(respn)
 	if respn == 1 then
 		local rest = data:sub(13)
@@ -60,7 +60,7 @@ function processor.processData(data)
 			processor.cbs[token] = nil
 		end
 	elseif respn == 2 then
-		if not buffers[token]then
+		if not buffers[token] then
 			buffers[token] = newBuffer('')
 		end
 		local buffer = buffers[token]
@@ -91,27 +91,27 @@ function processor.processData(data)
 		end
 		buffers[token] = nil
 	elseif respn == 3 then
-		if not buffers[token]then
+		if not buffers[token] then
 			buffers[token] = newBuffer(data:sub(13))
 			return
 		end
 		buffers[token]:add(data:sub(13))
-	elseif errcodes[respn]then
+	elseif errcodes[respn] then
 		local ec = errcodes[respn]
 		local err = ec.f(ec.t)
 		logger.warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
-		if processor.cbs[token]then
+		if processor.cbs[token] then
 			processor.cbs[token].f(nil, err, json.decode(data:sub(13)))
 			processor.cbs[token] = nil
 		end
 	else
 		logger.warn(string.format('Unknown response: %s', respn))
 		if not data then
-			data = 'no data?'
+			data = 'No Data?'
 		else
 			data = data:sub(13)
 		end
-		processor.cbs[token].f(nil, 'Unknown response',data)
+		processor.cbs[token].f(nil, 'Unknown response', data)
 		processor.cbs[token] = nil
 	end
 end
