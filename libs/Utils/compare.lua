@@ -1,4 +1,5 @@
 local bit = require('bit')
+
 local len, byte = string.len, string.byte
 local max = math.max
 local bor, bxor = bit.bor, bit.bxor

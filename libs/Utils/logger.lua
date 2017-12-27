@@ -1,7 +1,7 @@
 local emitter = require('Utils/emitty')
 local colorize = require('pretty-print').colorize
-local fmt, date = string.format, os.date
 
+local fmt, date = string.format, os.date
 local pat = '%F %T'
 
 local loggerMeta = function(self,...)

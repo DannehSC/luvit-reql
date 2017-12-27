@@ -1,4 +1,3 @@
-
 local running, yield, resume = coroutine.running, coroutine.yield, coroutine.resume
 
 local manager = {

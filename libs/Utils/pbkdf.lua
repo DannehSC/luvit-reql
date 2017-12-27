@@ -2,8 +2,9 @@ local ssl = require('openssl')
 local bits = require('Utils/bits')
 
 local xor = bits.xor
-local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
-local fmod, concat = math.fmod, table.concat
+local len, char, sub, pack = string.len, string.char, string.sub, string.pack
+local ceil, fmod =  math.ceil, math.fmod
+local concat = table.concat
 
 local function pbkdf(digest, password, salt, iteration, dkLen)
 	local function PRF(P, S)
