@@ -16,20 +16,22 @@ local default = {
 }
 
 local format = string.format
-local sub, len, find = string.sub, string.len, string.find
+local find = string.find
 
 return {
 	connect = function(options)
-		options = options and options or {}
+		options = options or {}
 		local type = type(options)
 		if type ~= 'table' then
 			return error(format('Bad argument #1 to luvit-reql.connect(), table expected, got %s', type))
 		end
+
 		for k,v in pairs(default) do
-			if not options[k] then
+			if options[k] == nil then
 				options[k] = v
 			end
 		end
+
 		if options.address:sub(#options.address)=='/'then
 			options.address = options.address:sub(1,#options.address-1)
 		end
@@ -37,14 +39,15 @@ return {
 			logger.warn('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
 		end
+
 		return connect(options)
 	end,
 
 	reql = function()
 		return reql()
 	end,
-	
+
 	emitter = emitter,
-	
+
 	logger = logger
 }
