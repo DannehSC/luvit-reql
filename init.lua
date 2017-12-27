@@ -1,7 +1,7 @@
 local connect = require('connect')
 local reql = require('Utils/reql.lua')
 local logger = require('Utils/logger.lua')
-local emitter = require('Utils/emitty.lua')
+local emitter = require('Utils/emitter.lua')
 
 -- Default options table || Do NOT edit, pass your options to the function instead
 
@@ -26,7 +26,7 @@ return {
 			return error(format('Bad argument #1 to luvit-reql.connect(), table expected, got %s', type))
 		end
 		for k,v in pairs(default) do
-			if not options[k] then
+			if options[k] == nil then
 				options[k] = v
 			end
 		end

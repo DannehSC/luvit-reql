@@ -229,7 +229,8 @@ function newReql(conn)
 		reql._data.raw = tab.raw
 		local token = reql.conn._getToken()
 		local x, is = callback, cmanager:isCoro()
-		if is and not reql._data.changes then
+		local changes = reql._data.changes
+		if is and not changes then
 			x = function(...)
 				cmanager:resume(token,...)
 			end
@@ -240,7 +241,7 @@ function newReql(conn)
 		for i in pairs(reql._data) do
 			reql._data[i] = nil
 		end
-		if is then
+		if is and not changes then
 			return cmanager:yield(token)
 		end
 	end

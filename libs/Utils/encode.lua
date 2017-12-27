@@ -94,7 +94,7 @@ local references = {
 		json = true
 	},
 	changes = {
-		f = functions[1],
+		f = functions[4],
 		t = term.changes
 	},
 	js = {

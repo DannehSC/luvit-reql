@@ -6,7 +6,7 @@ local x = require('./Utils/bits.lua')
 local reql = require('./Utils/reql.lua')
 local pbkdf = require('./Utils/pbkdf.lua')
 local logger = require('./Utils/logger.lua')
-local emitter = require('./Utils/emitty.lua')
+local emitter = require('./Utils/emitter.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
 local process = require('./Utils/processor.lua').processData
@@ -150,7 +150,6 @@ function connect(options)
 		connectToRethinkdb()
 	else
 		logger.hErr('Cannot connect outside of coroutine currently. Sorry.')
-		--coroutine.wrap(connectToRethinkdb)()
 	end
 	options.password = '<HIDDEN>'
 	local conn = {
