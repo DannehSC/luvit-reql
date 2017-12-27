@@ -12,7 +12,7 @@ end
 
 function emitter:on(event, callback)
 	local id = getId()
-	emitter.callbacks[id] = {
+	self.callbacks[id] = {
 		event = event,
 		callback = callback,
 	}
@@ -21,21 +21,21 @@ end
 
 function emitter:once(event, callback)
 	local id
-	id = emitter:on(event, function(...)
-		emitter:del(id)
+	id = self:on(event, function(...)
+		self:del(id)
 		callback(...)
 	end)
 	return id
 end
 
 function emitter:del(id)
-	if emitter.callbacks[id] then
-		emitter.callbacks[id] = nil
+	if self.callbacks[id] then
+		self.callbacks[id] = nil
 	end
 end
 
 function emitter:fire(event,...)
-	for _, v in pairs(emitter.callbacks)do
+	for _, v in pairs(self.callbacks) do
 		if v.event:lower() == event then
 			v.callback(...)
 		end
@@ -53,7 +53,7 @@ function emitter:waitFor(event,timeout)
 			end)
 		end)()
 	end
-	eid = emitter:once(event,function()
+	eid = self:once(event,function()
 		cmanager:resume(id)
 	end)
 	return cmanager:yield(id)

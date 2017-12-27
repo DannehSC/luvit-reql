@@ -16,8 +16,8 @@ local processor = {
 local buffers = {}
 local function newBuffer(tx)
 	local buffer = { data = tx }
-	function buffer:add(tx)
-		buffer.data = buffer.data .. tx
+	function buffer:add(data)
+		self.data = self.data .. data
 	end
 	return buffer
 end
