@@ -1,4 +1,4 @@
-local emitter = require('./emitty.lua')
+local emitter = require('Utils/emitty')
 local colorize = require('pretty-print').colorize
 local fmt, date = string.format, os.date
 

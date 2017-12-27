@@ -1,6 +1,6 @@
 local fmt = string.format
 local json = require('json')
-local protodef = require('./protodef.lua')
+local protodef = require('Utils/protodef')
 local term = protodef.Term
 local query = protodef.Query
 

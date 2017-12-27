@@ -1,6 +1,6 @@
 local ssl = require('openssl')
 local timer = require('timer')
-local cmanager = require('./coroutinemanager.lua')
+local cmanager = require('Utils/coroutinemanager')
 
 local emitter = {
 	callbacks = {}

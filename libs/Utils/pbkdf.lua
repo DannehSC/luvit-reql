@@ -1,5 +1,5 @@
 local ssl = require('openssl')
-local bits = require('./bits.lua')
+local bits = require('Utils/bits')
 
 local xor = bits.xor
 local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack

@@ -1,7 +1,7 @@
 --will send ReQL queries to the server
-local encode = require('./encode.lua')
-local intlib = require('./intlib.lua')
-local processor = require('./processor.lua')
+local encode = require('Utils/encode')
+local intlib = require('Utils/intlib')
+local processor = require('Utils/processor')
 local bytes = intlib.int_to_bytes
 
 return function(reql, token, callback)

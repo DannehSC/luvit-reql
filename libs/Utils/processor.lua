@@ -1,8 +1,8 @@
 local json = require('json')
-local intlib = require('./intlib.lua')
-local logger = require('./logger.lua')
-local errors = require('../error.lua')
--- local cmanager = require('./coroutinemanager.lua')
+local intlib = require('Utils/intlib')
+local logger = require('Utils/logger')
+local errors = require('error')
+-- local cmanager = require('Utils/coroutinemanager')
 
 local errcodes = {
 	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },

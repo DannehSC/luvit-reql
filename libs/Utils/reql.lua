@@ -1,6 +1,6 @@
 -- local json = require('json')
-local processQuery = require('./query.lua')
-local cmanager = require('./coroutinemanager.lua')
+local processQuery = require('Utils/query')
+local cmanager = require('Utils/coroutinemanager')
 
 local newReql
 function newReql(conn)
