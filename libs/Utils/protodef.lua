@@ -12,6 +12,7 @@ return {
 		[19] = "no-resources",
 		[20] = "other-error",
 	},
+
 	Protocol = {
 		PROTOBUF = 656407617,
 		JSON = 2120839367
