@@ -16,4 +16,7 @@ local function bxor256(u, t)
 	return char(unpack(res))
 end
 
-return {xor, bxor256}
+return {
+	xor = xor,
+	bxor = bxor
+}
