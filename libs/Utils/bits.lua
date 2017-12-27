@@ -18,5 +18,5 @@ end
 
 return {
 	xor = xor,
-	bxor = bxor
+	bxor = bxor256
 }
