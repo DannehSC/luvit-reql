@@ -1,6 +1,6 @@
 -- local json = require('json')
-local processQuery = require('./query.lua')
-local cmanager = require('./coroutinemanager.lua')
+local processQuery = require('Utils/query')
+local cmanager = require('Utils/coroutinemanager')
 
 local newReql
 function newReql(conn)
@@ -11,6 +11,8 @@ function newReql(conn)
 		}
 	}
 	if conn then reql.conn = conn end
+
+	-- Selecting Data
 	function reql.db(name)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
@@ -30,12 +32,18 @@ function newReql(conn)
 		reql._data.megaSuperGetData = true
 		return reql
 	end
-	function reql.getField(field)
+	function reql.filter(tab)
+		assert(type(tab) == 'table', 'bad argument #1 to reql.filter, table expected.')
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.get_field = field
+		reql._data.filter = reql._data.filter or {}
+		for i, v in pairs(tab) do
+			reql._data.filter[i] = v
+		end
 		return reql
 	end
+
+	-- Writing Data
 	function reql.insert(tab)
 		assert(type(tab) == 'table', 'bad argument #1 to reql.insert, table expected.')
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
@@ -43,30 +51,6 @@ function newReql(conn)
 		reql._data.insert = reql._data.insert or {}
 		for i, v in pairs(tab) do
 			reql._data.insert[i] = v
-		end
-		return reql
-	end
-	function reql.js(str)
-		assert(type(str) == 'string', 'bad argument #1 to reql.js, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.js = str
-		return reql
-	end
-	function reql.config()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.config = true
-		return reql
-	end
-	function reql.replace(tab)
-		assert(type(tab) == 'table', 'bad argument #1 to reql.replace, table expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.replace = reql._data.replace or {}
-		for i, v in pairs(tab) do
-			reql._data.replace[i] = v
 		end
 		return reql
 	end
@@ -80,16 +64,125 @@ function newReql(conn)
 		end
 		return reql
 	end
-	function reql.filter(tab)
-		assert(type(tab) == 'table', 'bad argument #1 to reql.filter, table expected.')
+	function reql.replace(tab)
+		assert(type(tab) == 'table', 'bad argument #1 to reql.replace, table expected.')
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.filter = reql._data.filter or {}
+		reql._data.replace = reql._data.replace or {}
 		for i, v in pairs(tab) do
-			reql._data.filter[i] = v
+			reql._data.replace[i] = v
 		end
 		return reql
 	end
+	function reql.delete()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.delete = true
+		return reql
+	end
+
+	-- Manipulating databases
+	function reql.dbCreate(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.dbCreate, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.db_create = name
+		return reql
+	end
+	function reql.dbDrop(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.dbDrop, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.db_drop = name
+		return reql
+	end
+	function reql.dbList()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.bypass = true
+		reql._data.usable = false
+		reql._data.db_list = true
+		return reql
+	end
+
+	-- Manipulating tables
+	function reql.tableCreate(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.tableCreate, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.table_create = name
+		return reql
+	end
+	function reql.tableDrop(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.tableDrop, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.table_drop = name
+		return reql
+	end
+	function reql.tableList()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.table_list = true
+		return reql
+	end
+	function reql.indexCreate(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.indexCreate, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.index_create = name
+		return reql
+	end
+	function reql.indexDrop(name)
+		assert(type(name) == 'string', 'bad argument #1 to reql.indexDrop, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.index_drop = name
+		return reql
+	end
+	function reql.indexList()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.index_list = true
+		return reql
+	end
+
+	-- Document manipulation
+	function reql.getField(field)
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.get_field = field
+		return reql
+	end
+
+	-- Control Structures
+	function reql.js(str)
+		assert(type(str) == 'string', 'bad argument #1 to reql.js, string expected.')
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.js = str
+		return reql
+	end
+
+	-- Administration
+	function reql.config()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.config = true
+		return reql
+	end
+
+	-- Other
 	function reql.inOrRe(tab)
 		assert(type(tab) == 'table', 'bad argument #1 to reql.inOrRe, table expected.')
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
@@ -122,90 +215,8 @@ function newReql(conn)
 		end
 		return reql
 	end
-	function reql.changes()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.changes = true
-		return reql
-	end
-	function reql.indexCreate(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.indexCreate, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.index_create = name
-		return reql
-	end
-	function reql.indexDrop(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.indexDrop, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.index_drop = name
-		return reql
-	end
-	function reql.indexList()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.index_list = true
-		return reql
-	end
-	function reql.dbCreate(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.dbCreate, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.db_create = name
-		return reql
-	end
-	function reql.dbDrop(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.dbDrop, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.db_drop = name
-		return reql
-	end
-	function reql.dbList()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.bypass = true
-		reql._data.usable = false
-		reql._data.db_list = true
-		return reql
-	end
-	function reql.delete()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.delete = true
-		return reql
-	end
-	function reql.tableCreate(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.tableCreate, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.table_create = name
-		return reql
-	end
-	function reql.tableDrop(name)
-		assert(type(name) == 'string', 'bad argument #1 to reql.tableDrop, string expected.')
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.table_drop = name
-		return reql
-	end
-	function reql.tableList()
-		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
-		assert(not reql.ran, 'ReQL instance already ran.')
-		reql._data.usable = false
-		reql._data.table_list = true
-		return reql
-	end
+
+	-- Date and Time
 	function reql.now()
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
@@ -214,6 +225,16 @@ function newReql(conn)
 		reql._data.now = true
 		return reql
 	end
+
+	-- Accessing ReQL
+	function reql.changes()
+		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
+		assert(not reql.ran, 'ReQL instance already ran.')
+		reql._data.usable = false
+		reql._data.changes = true
+		return reql
+	end
+
 	function reql.run(tab, callback)
 		if type(tab) == 'function'then
 			callback = tab

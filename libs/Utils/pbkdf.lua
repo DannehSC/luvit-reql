@@ -1,9 +1,10 @@
 local ssl = require('openssl')
-local x = require('./bits.lua')
+local bits = require('Utils/bits')
 
-local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
-local len, char, sub, ceil, pack = string.len, string.char, string.sub, math.ceil, string.pack
-local fmod, concat = math.fmod, table.concat
+local xor = bits.xor
+local len, char, sub, pack = string.len, string.char, string.sub, string.pack
+local ceil, fmod =  math.ceil, math.fmod
+local concat = table.concat
 
 local function pbkdf(digest, password, salt, iteration, dkLen)
 	local function PRF(P, S)

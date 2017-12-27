@@ -1,17 +1,17 @@
 local json = require('json')
 local ssl = require('openssl')
 local net = require('coro-net')
-local errors = require('./error.lua')
-local x = require('./Utils/bits.lua')
-local reql = require('./Utils/reql.lua')
-local pbkdf = require('./Utils/pbkdf.lua')
-local logger = require('./Utils/logger.lua')
-local emitter = require('./Utils/emitty.lua')
-local compare_digest = require('./Utils/compare.lua')
-local cmanager = require('./Utils/coroutinemanager.lua')
-local process = require('./Utils/processor.lua').processData
+local errors = require('error')
+local bits = require('Utils/bits')
+local reql = require('Utils/reql')
+local pbkdf = require('Utils/pbkdf')
+local logger = require('Utils/logger')
+local emitter = require('Utils/emitty')
+local compare_digest = require('Utils/compare')
+local cmanager = require('Utils/coroutinemanager')
+local process = require('Utils/processor').processData
 
-local xor, bxor256 = x[1], x[2] -- NOTE: unused variable
+local bxor256 = bits.bxor
 
 local concat, gmatch, format = table.concat, string.gmatch, string.format
 local checkCoroutine = cmanager.isCoro

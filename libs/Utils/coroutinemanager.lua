@@ -1,4 +1,3 @@
-
 local running, yield, resume = coroutine.running, coroutine.yield, coroutine.resume
 
 local manager = {
@@ -11,15 +10,15 @@ function manager:isCoro()
 end
 
 function manager:yield(id)
-	if not manager:isCoro() then return end
+	if not self:isCoro() then return end
 	local thread = running()
-	manager.threads[id] = thread
+	self.threads[id] = thread
 	return yield()
 end
 
 function manager:resume(id, ...)
-	if not manager.threads[id] then return end
-	resume(manager.threads[id], ...)
+	if not self.threads[id] then return end
+	resume(self.threads[id], ...)
 end
 
 return manager
