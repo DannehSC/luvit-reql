@@ -1,5 +1,8 @@
 # Luvit ReQL
 
+## Support
+For support, please join [the discord support server.](https://discord.gg/n6DUK36)
+
 ## Connecting
 To open a connection with luvit-reql you can do the following example.  
 **Caution! Currently required to be ran inside a coroutine.**
