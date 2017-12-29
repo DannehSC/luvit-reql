@@ -183,7 +183,7 @@ local function encode(reql)
 			end
 		end
 	end
-	str = '[1123, ' .. str .. ', {}]'
+	str = '[1, ' .. str .. ', {}]'
 	return str
 end
 return encode
