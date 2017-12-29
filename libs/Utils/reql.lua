@@ -236,6 +236,7 @@ function newReql(conn)
 			end
 		end
 		assert(type(x) == 'function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))
+		reql.caller = debug.getinfo(2)
 		processQuery(reql, token, x)
 		reql.ran = not reql.conn._options.reusable
 		for i in pairs(reql._data) do

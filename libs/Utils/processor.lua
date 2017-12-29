@@ -101,7 +101,12 @@ function processor.processData(data)
 		local err = ec.f(ec.t)
 		logger.warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
 		if processor.cbs[token]then
-			processor.cbs[token].f(nil, err, json.decode(data:sub(13)))
+			local d = processor.cbs[token]
+			if d.conn._options.debug then
+				logger.warn('Encoded query: '..d.encoded)
+				logger.warn('Line calling reql.run: '..d.caller.currentline)
+			end
+			d.f(nil, err, json.decode(data:sub(13)))
 			processor.cbs[token] = nil
 		end
 	else
