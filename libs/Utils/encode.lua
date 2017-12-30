@@ -40,7 +40,7 @@ local index = {
 	'changes',
 	'js',
 	'table_create',
-	'table_delete',
+	'table_drop',
 	'table_list',
 	'db_create',
 	'db_delete',
@@ -105,9 +105,9 @@ local references = {
 		f = functions[2],
 		t = term.table_create
 	},
-	table_delete = {
+	table_drop = {
 		f = functions[2],
-		t = term.table_delete
+		t = term.table_drop
 	},
 	table_list = {
 		f = functions[4],
@@ -117,9 +117,9 @@ local references = {
 		f = functions[2],
 		t = term.db_create
 	},
-	db_delete = {
+	db_drop = {
 		f = functions[2],
-		t = term.db_delete
+		t = term.db_drop
 	},
 	db_list = {
 		f = functions[4],
@@ -129,9 +129,9 @@ local references = {
 		f = functions[2],
 		t = term.index_create
 	},
-	index_delete = {
+	index_drop = {
 		f = functions[2],
-		t = term.index_delete
+		t = term.index_drop
 	},
 	index_list = {
 		f = functions[4],
