@@ -12,7 +12,7 @@ function logger.err(sig)
 	emitter:fire('error')
 end
 
-function logger.hErr(sig)
+function logger.harderr(sig)
 	sig = sig or '?'
 	print(date(datetime) .. ' | ' .. colorize('err', fmt("[FAIL]    | %s", sig)))
 	process:exit(1)
@@ -32,7 +32,7 @@ end
 
 function logger.debug(sig)
 	sig = sig or '?'
-	print(date(datetime) .. ' | ' .. fmt(colorize('userdata','[DEBUG]   ') .. '| %s', sig))
+	print(date(datetime) .. ' | ' .. fmt(colorize('userdata','[DEBUG]   ') .. '| ' .. colorize('number','%s'), sig))
 	emitter:fire('debug', sig)
 end
 

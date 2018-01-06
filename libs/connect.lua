@@ -114,7 +114,7 @@ function connect(options)
 		if not res.success then
 			socket.close()
 			if options.debug then
-				p('DEBUG', res.error)
+				p('DEBUG', res)
 			end
 			return logger.err(errors.ReqlAuthError("Error: " .. res.error))
 		end
@@ -149,7 +149,7 @@ function connect(options)
 	if checkCoroutine() then
 		connectToRethinkdb()
 	else
-		logger.hErr('Cannot connect outside of coroutine currently. Sorry.')
+		logger.harderr('Cannot connect outside of coroutine currently. Sorry.')
 	end
 	options.password = '<HIDDEN>'
 	local conn = {

@@ -2,7 +2,6 @@ local json = require('json')
 local intlib = require('./intlib.lua')
 local logger = require('./logger.lua')
 local errors = require('../error.lua')
--- local cmanager = require('./coroutinemanager.lua')
 
 local errcodes = {
 	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },
@@ -25,15 +24,16 @@ end
 local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1,8))
-	--local length = int(data:sub(9,12)) -- NOTE: unused variable
-	--local resp = data:sub(13) -- NOTE: unused variable
-	local t, respn = data:sub(13):match('([t])":(%d?%d)') -- NOTE: unused variable
+	local _, respn = data:sub(13):match('([t])":(%d?%d)')
 	respn = tonumber(respn)
 	if respn == 1 then
 		local rest = data:sub(13)
 		local dat
 		local todat = processor.cbs[token]
-		if not todat then return end
+		if not todat then
+			logger.warn('Invalid data token, resp code: '..respn)
+			return
+		end
 		if todat.raw then
 			dat = rest
 			if dat:find('%"r%"%:%[null%]') then
@@ -67,7 +67,10 @@ function processor.processData(data)
 		buffer:add(data:sub(13))
 		local dat
 		local todat = processor.cbs[token]
-		if not todat then return end
+		if not todat then 
+			logger.warn('Invalid data token, resp code: '..respn)
+			return
+		end
 		if todat.raw then
 			dat = buffer.data
 			if dat:find('%"r%"%:%[null%]') then
@@ -103,8 +106,8 @@ function processor.processData(data)
 		if processor.cbs[token]then
 			local d = processor.cbs[token]
 			if d.conn._options.debug then
-				logger.warn('Encoded query: '..d.encoded)
-				logger.warn('Line calling reql.run: '..d.caller.currentline)
+				logger.debug('Encoded query: '..d.encoded)
+				logger.debug('Line calling reql.run: '..d.caller.currentline)
 			end
 			d.f(nil, err, json.decode(data:sub(13)))
 			processor.cbs[token] = nil
