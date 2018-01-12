@@ -1,3 +1,4 @@
+
 local ReqlError = {}
 
 local hierarchy = {
@@ -25,7 +26,7 @@ local errMeta = {
 	end
 }
 
-function ReqlError.__index(_, index)
+function ReqlError:__index(index)
 	return function(msg, term, frames)
 		local err = setmetatable({
 			name = index,

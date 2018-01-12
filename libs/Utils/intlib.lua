@@ -1,3 +1,4 @@
+
 return {
 	byte_to_int = function(str)
 		local n = 0
@@ -6,6 +7,7 @@ return {
 		end
 		return n
 	end,
+	
 	int_to_bytes = function(num, bytes)
 		local res = {}
 		num = math.fmod(num, 2 ^ (8 * bytes))

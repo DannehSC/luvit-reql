@@ -1,3 +1,4 @@
+
 local bit = require('bit')
 local len, byte, char = string.len, string.byte, string.char
 local max = math.max
@@ -17,4 +18,4 @@ local function bxor256(u, t)
 	return char(unpack(res))
 end
 
-return {xor, bxor256}
+return { xor = xor, bxor256 = bxor256 }

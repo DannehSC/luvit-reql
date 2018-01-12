@@ -1,4 +1,4 @@
--- local json = require('json')
+
 local processQuery = require('./query.lua')
 local cmanager = require('./coroutinemanager.lua')
 
@@ -10,6 +10,7 @@ function newReql(conn)
 			usable = true
 		}
 	}
+
 	if conn then reql.conn = conn end
 	function reql.db(name)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
@@ -215,11 +216,11 @@ function newReql(conn)
 		return reql
 	end
 	function reql.run(tab, callback)
-		if type(tab) == 'function'then
+		if type(tab) == 'function' then
 			callback = tab
 			tab = nil
 		end
-		tab= tab or {}
+		tab = tab or { }
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql.conn = reql.conn or tab.conn
 		assert(reql.conn ~= nil, 'No connection passed to reql.run()')
@@ -246,7 +247,7 @@ function newReql(conn)
 			return cmanager:yield(token)
 		end
 	end
-	for _, v in pairs({ 'continue', 'stop', 'noreplywait', 'server_info' })do
+	for _, v in pairs({ 'continue', 'stop', 'noreplywait', 'server_info' }) do
 		reql[v] = function()
 			assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 			reql._data.usable = false
