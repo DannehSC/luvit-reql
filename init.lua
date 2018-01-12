@@ -14,15 +14,20 @@ local default = {
 	db = 'test',
 	reconnect = false,
 	reusable = false,
+	debug = false
 }
 
 local format = string.format
 local sub, len, find = string.sub, string.len, string.find
 
 return {
-	connect = function(options)
+	connect = function(options, callback)
 		options = options and options or {}
 		local type = type(options)
+		if type == 'function' then
+			callback = options
+			options, type = { }, 'table'
+		end
 		if type ~= 'table' then
 			return error(format('Bad argument #1 to luvit-reql.connect(), table expected, got %s', type))
 		end
@@ -38,7 +43,7 @@ return {
 			logger.warn('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
 		end
-		return connect(options)
+		return connect(options, callback)
 	end,
 
 	reql = function()
