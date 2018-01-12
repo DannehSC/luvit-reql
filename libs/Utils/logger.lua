@@ -9,13 +9,13 @@ local logger = { }
 
 function logger.err(sig)
 	sig = sig or '?'
-	print(date(datetime) .. ' | ' .. fmt(colorize('err', '[FAIL]  ') .. '| %s', sig)
+	print(date(datetime) .. ' | ' .. fmt(colorize('err', '[FAIL]  ') .. '| %s', sig))
 	emitter:fire('error')
 end
 
 function logger.harderr(sig)
 	sig = sig or '?'
-	print(date(datetime) .. ' | ' .. fmt(colorize('err', '[FAIL]  ') .. '| %s', sig)
+	print(date(datetime) .. ' | ' .. fmt(colorize('err', '[FAIL]  ') .. '| %s', sig))
 	process:exit(1)
 end
 
