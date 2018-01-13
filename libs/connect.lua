@@ -35,7 +35,7 @@ local function copy(t)
 end
 
 local connect
-function connect(options)
+function connect(options, callback)
 	local socket = {
 		closed = false
 	}
@@ -154,13 +154,6 @@ function connect(options)
 		end)()
 	end
 
-	if checkCoroutine() then
-		connectToRethinkdb()
-	else
-		logger.harderr('Cannot connect outside of coroutine currently. Sorry.')
-	end
-
-	options.password = '<HIDDEN>'
 	local conn = {
 		_socket = socket,
 		_getToken = new_token(),
@@ -174,10 +167,31 @@ function connect(options)
 			return not socket.closed
 		end
 	}
-	
+
 	conn.reql = function()
 		return reql(conn)
 	end
-	return conn
+
+	if checkCoroutine() then
+		if options.debug then
+			logger.debug('Running Luvit-ReQL in Sync Mode')
+		end
+		connectToRethinkdb()
+
+		options.password = '<HIDDEN>'
+		return conn
+	else
+		logger.warn('Running Luvit-ReQL in Async Mode')
+		coroutine.wrap(function()
+			connectToRethinkdb()
+
+			options.password = '<HIDDEN>'
+			if type(callback) == 'function' then
+				callback(conn)
+			else
+				logger.harderr('Cannot run Luvit-ReQL in Async Mode without a callback')
+			end
+		end)()
+	end
 end
 return connect
