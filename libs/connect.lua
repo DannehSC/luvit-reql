@@ -173,7 +173,9 @@ function connect(options, callback)
 	end
 
 	if checkCoroutine() then
-		logger.debug('Running Luvit-ReQL in Sync Mode')
+		if options.debug then
+			logger.debug('Running Luvit-ReQL in Sync Mode')
+		end
 		connectToRethinkdb()
 
 		options.password = '<HIDDEN>'
