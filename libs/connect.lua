@@ -10,6 +10,9 @@ local logger = require('./Utils/logger.lua')
 local emitter = require('./Utils/emitter.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
+
+local dump = require('pretty-print').dump
+
 local process = require('./Utils/processor.lua').processData
 
 local bxor256 = bits.bxor256
@@ -120,7 +123,7 @@ function connect(options, callback)
 		if not res.success then
 			socket.close()
 			if options.debug then
-				logger.debug(err)
+				logger.debug(dump(err))
 			end
 			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
