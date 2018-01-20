@@ -120,7 +120,7 @@ function connect(options, callback)
 		if not res.success then
 			socket.close()
 			if options.debug then
-				p('DEBUG', res)
+				logger.debug(err)
 			end
 			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
