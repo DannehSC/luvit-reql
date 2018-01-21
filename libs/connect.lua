@@ -146,8 +146,20 @@ function connect(options, callback)
 		socket.closed = false
 		emitter:fire('connected')
 		coroutine.wrap(function()
+			-- Quick fix until trixie writes a decoder to do this
+			local incomplete
+			local last
 			for data in read do
-				process(data)
+				if data ~= last then
+					local _, success = pcall(function() return type(json.decode(incomplete and (incomplete .. data):sub(13) or data:sub(13))) == 'table' end)
+					last = incomplete and data or data:sub(13)
+					if success then
+						process(incomplete and incomplete .. data or data)
+						incomplete = nil
+					else
+						incomplete = incomplete and incomplete .. data or data
+					end
+				end
 			end
 			socket.closed = true
 			logger.warn(format('Connection to %s:%s closed.', addr, options.port))
