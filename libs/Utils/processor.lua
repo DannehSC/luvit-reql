@@ -23,7 +23,7 @@ end
 local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1,8))
-	local _, respn = data:sub(13):match('([t])":(%d?%d)')
+	local respn = data:sub(13):match('"t":(%d?%d)')
 	respn = tonumber(respn)
 	if respn == 1 then
 		local rest = data:sub(13)
