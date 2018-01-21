@@ -123,7 +123,7 @@ function connect(options, callback)
 		if not res.success then
 			socket.close()
 			if options.debug then
-				logger.debug(dump(err))
+				logger.debug(dump(res))
 			end
 			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
