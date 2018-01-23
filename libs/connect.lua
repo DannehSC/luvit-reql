@@ -10,6 +10,9 @@ local logger = require('./Utils/logger.lua')
 local emitter = require('./Utils/emitter.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
+
+local dump = require('pretty-print').dump
+
 local process = require('./Utils/processor.lua').processData
 
 local bxor256 = bits.bxor256
@@ -120,7 +123,7 @@ function connect(options, callback)
 		if not res.success then
 			socket.close()
 			if options.debug then
-				p('DEBUG', res)
+				logger.debug(dump(res))
 			end
 			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
@@ -143,8 +146,20 @@ function connect(options, callback)
 		socket.closed = false
 		emitter:fire('connected')
 		coroutine.wrap(function()
+			-- Quick fix until trixie writes a decoder to do this
+			local incomplete
+			local last
 			for data in read do
-				process(data)
+				if data ~= last then
+					local _, success = pcall(function() return type(json.decode(incomplete and (incomplete .. data):sub(13) or data:sub(13))) == 'table' end)
+					last = incomplete and data or data:sub(13)
+					if success then
+						process(incomplete and incomplete .. data or data)
+						incomplete = nil
+					else
+						incomplete = incomplete and incomplete .. data or data
+					end
+				end
 			end
 			socket.closed = true
 			logger.warn(format('Connection to %s:%s closed.', addr, options.port))
