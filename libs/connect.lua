@@ -186,6 +186,14 @@ function connect(options, callback)
 	conn.reql = function()
 		return reql(conn)
 	end
+	
+	conn.test = function()
+		if checkCoroutine() then
+			require('./Utils/test.lua')(conn)
+		else
+			require('./Utils/asynctest.lua')(conn)
+		end
+	end
 
 	if checkCoroutine() then
 		if options.debug then
