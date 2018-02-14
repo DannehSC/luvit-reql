@@ -14,7 +14,8 @@ local default = {
 	db = 'test',
 	reconnect = false,
 	reusable = false,
-	debug = false
+	debug = false,
+	file = 'luvitreql.log'
 }
 
 local format = string.format
@@ -36,6 +37,7 @@ return {
 				options[k] = v
 			end
 		end
+		logger._file = options.file
 		if options.address:sub(#options.address) == '/' then
 			options.address = options.address:sub(1, #options.address - 1)
 		end
