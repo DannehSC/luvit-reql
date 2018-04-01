@@ -45,7 +45,7 @@ function connect(options, callback)
 	local addr = options.address
 	addr = addr:gsub('https://', '')
 	addr = addr:gsub('http://', '')
-	-- local tls = options.address:sub(1, 5) == 'https' -- NOTE: "tls" unused variable
+	
 	local function connectToRethinkdb()
 		local opt = copy(options)
 		local stuff = {net.connect({

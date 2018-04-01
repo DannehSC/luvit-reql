@@ -80,8 +80,8 @@ local references = {
 }
 
 local function encode(reql)
-	if queries[reql.query] then
-		return queries[reql.query]
+	if queries[reql._data.query] then
+		return queries[reql._data.query]
 	end
 	if reql._table ~= nil and reql._database == nil then
 		return error('ReQL table passed to query encoder, no database present.')

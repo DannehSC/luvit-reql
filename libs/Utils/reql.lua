@@ -1,4 +1,5 @@
 
+local logger = require('./logger.lua')
 local processQuery = require('./query.lua')
 local cmanager = require('./coroutinemanager.lua')
 
@@ -228,12 +229,18 @@ function newReql(conn)
 		reql._data.database = (not reql._data.bypass and (reql._data.database or tab.db or reql.conn._options.db or nil))
 		reql._data.table = reql._data.table or tab.table or nil
 		reql._data.raw = tab.raw
-		local token = reql.conn._getToken()
+		local token = reql._data.__overridetoken__ or reql.conn._getToken()
 		local x, is = callback, cmanager:isCoro()
 		local changes = reql._data.changes
 		if is and not changes then
 			x = function(...)
-				cmanager:resume(token,...)
+				if reql.conn._options.debug then	
+					logger.debug('Resuming thread [' .. token .. ']')
+				end
+				cmanager:resume(token, ...)
+				if reql.conn._options.debug then
+					logger.debug('Resumed thread [' .. token.. ']')
+				end
 			end
 		end
 		assert(type(x) == 'function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))
@@ -243,7 +250,7 @@ function newReql(conn)
 		for i in pairs(reql._data) do
 			reql._data[i] = nil
 		end
-		if is and not changes then
+		if is and not changes and not tab._dont then
 			return cmanager:yield(token)
 		end
 	end
@@ -251,7 +258,7 @@ function newReql(conn)
 		reql[v] = function()
 			assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 			reql._data.usable = false
-			reql.query = v
+			reql._data.query = v
 			return reql
 		end
 	end
