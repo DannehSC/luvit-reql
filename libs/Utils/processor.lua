@@ -12,13 +12,6 @@ local errcodes = {
 local processor = { cbs = {} }
 
 local buffers = {}
---[[local function newBuffer(tx)
-	local buffer = { data = tx }
-	function buffer:add(tx)
-		buffer.data = buffer.data .. tx
-	end
-	return buffer
-end]]
 
 local int = intlib.byte_to_int
 function processor.processData(data)
@@ -63,10 +56,15 @@ function processor.processData(data)
 		end
 	elseif respn == 2 then
 		if not buffers[token] then
-			buffers[token] = {}
+			buffers[token] = {
+				chunks = true,
+				data = {},
+			}
 		end
 		local buffer = buffers[token]
-		buffer['CHUNK' .. #buffers[token] + 1] = json.decode(data:sub(13))
+		for i,v in pairs(json.decode(data:sub(13)).r) do
+			table.insert(buffer.data, v)
+		end
 		local dat
 		local todat = processor.cbs[token]
 		if not todat then 
@@ -97,12 +95,13 @@ function processor.processData(data)
 		local tab = json.decode(data:sub(13))
 		if not buffers[token] then
 			buffers[token] = {
-				['CHUNK1'] = tab
+				chunks = true,
+				data = {}
 			}
-			--newBuffer(data:sub(13))
-			return
 		end
-		buffers[token]['CHUNK' .. #buffers[token] + 1] = tab
+		for i,v in pairs(tab.r) do
+			table.insert(buffers[token].data, v)
+		end
 	elseif errcodes[respn] then
 		local ec = errcodes[respn]
 		local err = ec.f(ec.t)
