@@ -32,7 +32,7 @@ function logger.setFile(fileName)
 		closeSync(logger._opened)
 	end
 	logger._file = fileName
-	logger.info('Set file to: '..fileName)
+	logger.info('Set file to: '..tostring(fileName))
 end
 
 function logger.err(sig)

@@ -3,6 +3,7 @@ local connect = require('connect')
 local reql = require('Utils/reql.lua')
 local logger = require('Utils/logger.lua')
 local emitter = require('Utils/emitter.lua')
+local cmanager = require('Utils/coroutinemanager.lua')
 
 -- Default options table || Do NOT edit, pass your options to the function instead
 
@@ -54,5 +55,7 @@ return {
 	
 	emitter = emitter,
 	
-	logger = logger
+	logger = logger,
+	
+	_cmanager = cmanager
 }

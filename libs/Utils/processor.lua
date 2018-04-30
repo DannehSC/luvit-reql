@@ -122,8 +122,10 @@ function processor.processData(data)
 		else
 			data = data:sub(13)
 		end
-		processor.cbs[token].f(nil, 'Unknown response', data)
-		processor.cbs[token] = nil
+		if processor.cbs[token] then
+			processor.cbs[token].f(nil, 'Unknown response', data)
+			processor.cbs[token] = nil
+		end
 	end
 end
 return processor
