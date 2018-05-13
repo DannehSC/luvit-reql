@@ -150,11 +150,15 @@ function connect(options, callback)
 
 			local chunk = { }
 			local incomplete
+			local last
 
 			for data in read do
 			    if data == last then
-				logger.err('data same as last sent')
+				if options.debug then
+					logger.debug('websocket data same as last sent')
+				end
 			    else
+				last = data
 				chunk[#chunk + 1] = data
 
 				local _, success = pcall(function() return type(json.decode(incomplete and table.concat(chunk, ''):sub(13))) == 'table' end)
