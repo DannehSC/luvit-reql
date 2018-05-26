@@ -6,7 +6,6 @@ local errors = require('./error.lua')
 local bits = require('./Utils/bits.lua')
 local reql = require('./Utils/reql.lua')
 local pbkdf = require('./Utils/pbkdf.lua')
-local logger = require('./Utils/logger.lua')
 local emitter = require('./Utils/emitter.lua')
 local compare_digest = require('./Utils/compare.lua')
 local cmanager = require('./Utils/coroutinemanager.lua')
@@ -38,25 +37,25 @@ local function copy(t)
 end
 
 local connect
-function connect(options, callback)
+function connect(options, callback, logger)
 	local socket = {
 		closed = false
 	}
 	local addr = options.address
 	addr = addr:gsub('https://', '')
 	addr = addr:gsub('http://', '')
-	
+
 	local function connectToRethinkdb()
 		local opt = copy(options)
 		local stuff = {net.connect({
 			host = addr,
 			port = options.port,
 		})}
-		logger.info(format('Connecting to %s:%s', addr, options.port))
+		logger:info(format('Connecting to %s:%s', addr, options.port))
 		local read, write, close = stuff[1], stuff[2], stuff[6]
 		if type(write) == 'string' then
 			socket.closed = true
-			return logger.err('Socket error | ' .. write)
+			return logger:err('Socket error | ' .. write)
 		end
 		socket.read = read
 		socket.write = write
@@ -72,7 +71,7 @@ function connect(options, callback)
 		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: "res" unused variable
 		if not success then
 			socket.close()
-			return logger.err(errors.ReqlDriverError('Error reading JSON data.'))
+			return logger:err(errors.ReqlDriverError('Error reading JSON data.'))
 		end
 		local nonce = ssl.base64(ssl.random(18), true)
 		local client_first_message = 'n=' .. user .. ',r=' .. nonce
@@ -88,7 +87,7 @@ function connect(options, callback)
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
-			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
+			return logger:err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
 		local auth = {}
 		local server_first_message = res.authentication
@@ -103,7 +102,7 @@ function connect(options, callback)
 		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32) -- NOTE: "salt_error" unused variable
 		if not salted_password then
 			socket.close()
-			return logger.err(errors.ReqlDriverError('Salt error'))
+			return logger:err(errors.ReqlDriverError('Salt error'))
 		end
 		local ckHMAC = ssl.hmac.new('sha256', salted_password)
 		local client_key = ckHMAC:final('Client Key', true)
@@ -122,16 +121,14 @@ function connect(options, callback)
 		res = json.decode(read())
 		if not res.success then
 			socket.close()
-			if options.debug then
-				logger.debug(dump(res))
-			end
-			return logger.err(errors.ReqlAuthError('Error: ' .. res.error))
+			logger:debug(dump(res))
+			return logger:err(errors.ReqlAuthError('Error: ' .. res.error))
 		end
 		for k,v in gmatch(res.authentication .. ',', '([vV])=(.-),')do
 			auth[k] = v
 		end
 		if not auth.v then
-			return logger.err(errors.ReqlDriverError('Missing server signature'))
+			return logger:err(errors.ReqlDriverError('Missing server signature'))
 		end
 		local skHMAC = ssl.hmac.new('sha256', salted_password)
 		local server_key = skHMAC:final('Server Key', true)
@@ -139,10 +136,10 @@ function connect(options, callback)
 		local server_signature = ssHMAC:final(auth_message, true)
 		if not compare_digest(auth.v, server_signature)then
 			socket.close()
-			return logger.err(errors.ReqlAuthError('Invalid server signature'))
+			return logger:err(errors.ReqlAuthError('Invalid server signature'))
 		end
 
-		logger.info(format('Connection to %s:%s complete.', addr, options.port))
+		logger:info(format('Connection to %s:%s complete.', addr, options.port))
 		socket.closed = false
 		emitter:fire('connected')
 		coroutine.wrap(function()
@@ -162,7 +159,7 @@ function connect(options, callback)
 				end
 			end
 			socket.closed = true
-			logger.warn(format('Connection to %s:%s closed.', addr, options.port))
+			logger:warn(format('Connection to %s:%s closed.', addr, options.port))
 			if options.reconnect then
 				connect(opt)
 			end
@@ -173,8 +170,9 @@ function connect(options, callback)
 		_socket = socket,
 		_getToken = new_token(),
 		_options = options,
+		logger = logger,
 		close = function()
-			logger.info('Closing socket, cleaning up.')
+			logger:info('Closing socket, cleaning up.')
 			options.reconnect = false
 			socket.close()
 		end,
@@ -196,15 +194,13 @@ function connect(options, callback)
 	end
 
 	if checkCoroutine() then
-		if options.debug then
-			logger.debug('Running Luvit-ReQL in Sync Mode')
-		end
+		logger:debug('Running Luvit-ReQL in Sync Mode')
 		connectToRethinkdb()
 
 		options.password = '<HIDDEN>'
 		return conn
 	else
-		logger.warn('Running Luvit-ReQL in Async Mode')
+		logger:warn('Running Luvit-ReQL in Async Mode')
 		coroutine.wrap(function()
 			connectToRethinkdb()
 
@@ -212,9 +208,10 @@ function connect(options, callback)
 			if type(callback) == 'function' then
 				callback(conn)
 			else
-				logger.harderr('Cannot run Luvit-ReQL in Async Mode without a callback')
+				logger:harderr('Cannot run Luvit-ReQL in Async Mode without a callback')
 			end
 		end)()
 	end
 end
+
 return connect

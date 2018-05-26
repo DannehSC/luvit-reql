@@ -32,7 +32,7 @@ local function getMem()
 end
 
 local started = uv.hrtime()
-logger.debug('Starting 2000 query stress test [ASYNC]')
+logger:debug('Starting 2000 query stress test [ASYNC]')
 local startingMem = getMem()
 local reql = conn.reql
 local name = ssl.base64(ssl.random(40)):gsub('=',''):gsub('/',''):gsub('+','')
@@ -52,9 +52,13 @@ reql().dbCreate(name).run(function()
 		reql().dbDrop(name).run(function()
 			local endMem = getMem()
 			local ended = uv.hrtime()
-			logger.debug(fmt('\nTest took: %s ms\n\nMem before testing:\nGB: %s\nMB: %s\nKB: %s\n\nMem post testing:\nGB: %s\nMB: %s\nKB: %s',
+			logger:debug(fmt('\nTest took: %s ms\n\nMem before testing:\nGB: %s\nMB: %s\nKB: %s\n\nMem post testing:\nGB: %s\nMB: %s\nKB: %s',
 				((ended - started) / NS_PER_MS),startingMem.gb,startingMem.mb,startingMem.kb,endMem.gb,endMem.mb,endMem.kb
 			))
 		end)
 	end)
 end)
+
+return function()
+	return print('async test is not supported yet.')
+end
