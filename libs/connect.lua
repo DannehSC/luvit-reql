@@ -36,6 +36,36 @@ local function copy(t)
 	return n
 end
 
+local function decoder()
+	local len
+	local data_buffer = { }
+	local total_len = 0
+	return function(buffer)
+		local head = buffer:match('(............){"t":%d%d?,"')
+
+		if head then
+			len = string.unpack('<I4', head:sub(-4)) + 12
+		end
+
+		if len then
+			if #buffer == len then
+				return buffer
+			else
+				data_buffer[#data_buffer + 1] = buffer
+				total_len = total_len + #buffer
+
+				if total_len == len then
+					total_len = 0
+					data_buffer = { }
+					return table.concat(data_buffer, '')
+				end
+			end
+		else
+			return buffer
+		end
+	end
+end
+
 local connect
 function connect(options, callback, logger)
 	local socket = {
@@ -50,7 +80,9 @@ function connect(options, callback, logger)
 		local stuff = {net.connect({
 			host = addr,
 			port = options.port,
+			decode = decoder()
 		})}
+
 		logger:info(format('Connecting to %s:%s', addr, options.port))
 		local read, write, close = stuff[1], stuff[2], stuff[6]
 		if type(write) == 'string' then
@@ -68,6 +100,7 @@ function connect(options, callback, logger)
 
 		-- Initiation (First Client Message/First Server Challenge)
 		write(string.pack('<I', 0x34c2bdc3))
+
 		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: "res" unused variable
 		if not success then
 			socket.close()
@@ -143,20 +176,8 @@ function connect(options, callback, logger)
 		socket.closed = false
 		emitter:fire('connected')
 		coroutine.wrap(function()
-			-- Quick fix until trixie writes a decoder to do this
-			local incomplete
-			local last
 			for data in read do
-				if data ~= last then
-					local _, success = pcall(function() return type(json.decode(incomplete and (incomplete .. data):sub(13) or data:sub(13))) == 'table' end)
-					last = incomplete and data or data:sub(13)
-					if success then
-						process(incomplete and incomplete .. data or data)
-						incomplete = nil
-					else
-						incomplete = incomplete and incomplete .. data or data
-					end
-				end
+				process(data)
 			end
 			socket.closed = true
 			logger:warn(format('Connection to %s:%s closed.', addr, options.port))

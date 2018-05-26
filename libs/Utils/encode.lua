@@ -44,7 +44,7 @@ local index = {
 	'table_drop',
 	'table_list',
 	'db_create',
-	'db_delete',
+	'db_drop',
 	'db_list',
 	'index_create',
 	'index_delete',
