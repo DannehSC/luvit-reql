@@ -68,7 +68,7 @@ local references = {
 	table_create = { f = functions[2], t = term.table_create },
 	table_drop =   { f = functions[2], t = term.table_drop   },
 	table_list =   { f = functions[4], t = term.table_list   },
-	db_create =    { f = functions[2], t = term.db_create    },
+	db_create =    { f = functions[1], t = term.db_create    },
 	db_drop =      { f = functions[2], t = term.db_drop      },
 	db_list =      { f = functions[4], t = term.db_list      },
 	index_create = { f = functions[2], t = term.index_create },

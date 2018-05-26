@@ -3,6 +3,7 @@ local connect = require('connect')
 local reql = require('Utils/reql.lua')
 local emitter = require('Utils/emitter.lua')
 local cmanager = require('Utils/coroutinemanager.lua')
+local logger_f = require('Utils/logger.lua')
 
 -- Default options table || Do NOT edit, pass your options to the function instead
 
@@ -23,7 +24,7 @@ local sub, len, find = string.sub, string.len, string.find
 
 return {
 	connect = function(options, callback)
-		local logger = require('Utils/logger.lua') -- to ensure that even with 2 rethink connections your options may be seperate
+		local logger = logger_f()
 
 		options = options and options or {}
 		local type = type(options)
@@ -57,7 +58,7 @@ return {
 	
 	emitter = emitter,
 	
-	logger = require('Utils/logger.lua'),
+	logger = logger_f(),
 	
 	_cmanager = cmanager
 }

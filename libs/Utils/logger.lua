@@ -14,15 +14,16 @@ local types = {
 	[5] = '[HARDERR]',
 }
 
-function write(logger, typeOf, data)
-	if logger._file ~= false then
+local function write(logger, typeOf, data)
+	if type(logger._file) == 'string' then
 		local file
 		if logger._opened == nil then
 			file = openSync(logger._file, 'a')
+			logger._opened = file
 		else
 			file = logger._opened
 		end
-		writeSync(file, -1, fmt('%s | %s | %s\n', date(datetime), typeOf, data))
+		writeSync(file, -1, f('%s | %s | %s\n', date(datetime), typeOf, data))
 	end
 end
 
@@ -61,6 +62,8 @@ local function err(logger, fmt, ...)
 end
 
 local function debug(logger, fmt, ...)
+	if logger.options and not logger.options.debug then return end
+	
 	fmt = fmt:format(...)
 
 	write(logger, types[4], fmt)

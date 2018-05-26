@@ -1,7 +1,7 @@
 
 local json = require('json')
 local intlib = require('./intlib.lua')
-local logger = require('./logger.lua')
+local logger = require('./logger.lua')()
 local errors = require('../error.lua')
 
 local errcodes = {
