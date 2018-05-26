@@ -143,20 +143,32 @@ function connect(options, callback, logger)
 		socket.closed = false
 		emitter:fire('connected')
 		coroutine.wrap(function()
-			-- Quick fix until trixie writes a decoder to do this
+			-- more efficient fix since trixie doesnt want to write a decoder and concatenation can be bad
+
+			local chunk = { }
 			local incomplete
 			local last
+
 			for data in read do
-				if data ~= last then
-					local _, success = pcall(function() return type(json.decode(incomplete and (incomplete .. data):sub(13) or data:sub(13))) == 'table' end)
-					last = incomplete and data or data:sub(13)
-					if success then
-						process(incomplete and incomplete .. data or data)
-						incomplete = nil
-					else
-						incomplete = incomplete and incomplete .. data or data
-					end
+			    if data == last then
+				if options.debug then
+					logger.debug('websocket data same as last sent')
 				end
+			    else
+				last = data
+				chunk[#chunk + 1] = data
+
+				local _, success = pcall(function() return type(json.decode(incomplete and table.concat(chunk, ''):sub(13))) == 'table' end)
+
+				if success then
+				    chunk = { }
+				    incomplete = nil
+
+				    process(table.concat(chunk, ''))
+				else
+				    incomplete = true
+				end
+			    end
 			end
 			socket.closed = true
 			logger:warn(format('Connection to %s:%s closed.', addr, options.port))
