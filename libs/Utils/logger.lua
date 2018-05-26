@@ -38,6 +38,7 @@ local function setFile(logger, fileName)
 end
 
 local function info(logger, fmt, ...)
+	fmt = tostring(fmt)
 	fmt = fmt:format(...)
 
 	write(logger, types[1], fmt)
@@ -46,6 +47,7 @@ local function info(logger, fmt, ...)
 end
 
 local function warn(logger, fmt, ...)
+	fmt = tostring(fmt)
 	fmt = fmt:format(...)
 
 	write(logger, types[2], fmt)
@@ -54,6 +56,7 @@ local function warn(logger, fmt, ...)
 end
 
 local function err(logger, fmt, ...)
+	fmt = tostring(fmt)
 	fmt = fmt:format(...)
 
 	write(logger, types[3], fmt)
@@ -63,7 +66,8 @@ end
 
 local function debug(logger, fmt, ...)
 	if logger.options and not logger.options.debug then return end
-	
+
+	fmt = tostring(fmt)
 	fmt = fmt:format(...)
 
 	write(logger, types[4], fmt)
@@ -72,6 +76,7 @@ local function debug(logger, fmt, ...)
 end
 
 local function harderr(logger, fmt, ...)
+	fmt = tostring(fmt)
 	fmt = fmt:format(...)
 
 	write(logger, types[5], fmt)
