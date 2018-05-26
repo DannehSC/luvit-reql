@@ -58,3 +58,7 @@ reql().dbCreate(name).run(function()
 		end)
 	end)
 end)
+
+return function()
+	return print('async test is not supported yet.')
+end
