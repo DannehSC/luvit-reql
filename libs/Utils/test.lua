@@ -7,28 +7,34 @@ local cg = collectgarbage
 local fmt = string.format
 local hrtime = uv.hrtime
 
-local NS_PER_US = 1000
+local S_PER_MIN = 60
+local MS_PER_S = 1000
 local US_PER_MS = 1000
-local NS_PER_MS = NS_PER_US * US_PER_MS
+local NS_PER_US = 1000
 
+local NS_PER_MS = NS_PER_US * US_PER_MS
+local NS_PER_S = NS_PER_MS * MS_PER_S
+local NS_PER_MIN = NS_PER_MS * MS_PER_S * S_PER_MIN
+
+local modf, fmod = math.modf, math.fmod
+
+local MB_PER_GB = 1024
+local KB_PER_MB = 1024
+local B_PER_KB = 1024
+
+local B_PER_MB = B_PER_KB * KB_PER_MB
+local B_PER_GB = B_PER_MB * MB_PER_GB
+
+local memfmt = '%s GB %s MB %s KB %s B'
 local function getMem()
-	local mem = cg('count')
-	local tab = {
-		kb = 0,
-		mb = 0,
-		gb = 0,
-	}
-	if mem > 1000 then
-		tab.mb = mem / 1000
-		tab.kb = mem - (tab.mb * 1000)
-		if tab.mb > 1000 then
-			tab.gb = tab.mb / 1000
-			tab.mb = mem - (tab.gb * 1000)
-		end
-	else
-		tab.kb = mem
-	end
-	return tab
+	local mem = cg('count') * B_PER_KB
+
+	return memfmt:format(modf(mem / B_PER_GB), modf(fmod(mem / B_PER_MB, MB_PER_GB)), modf(fmod(mem / B_PER_KB, KB_PER_MB)), modf(fmod(mem, B_PER_KB)))
+end
+
+local timefmt = '%s min %s sec %s ms %s us %s ns'
+local function normalize_ms(ns)
+	return timefmt:format(modf(ns / NS_PER_MIN), modf(fmod(ns / NS_PER_S, S_PER_MIN)), modf(fmod(ns / NS_PER_MS, MS_PER_S)), modf(fmod(ns / NS_PER_US, US_PER_MS)), modf(fmod(ns, NS_PER_US)))
 end
 
 return function(conn)
@@ -51,7 +57,5 @@ return function(conn)
 	reql().dbDrop(name).run()
 	local endMem = getMem()
 	local ended = uv.hrtime()
-	conn.logger:info(fmt('\nTest took: %s\n\nMem before testing:\nGB: %s\nMB: %s\nKB: %s\n\nMem post testing:\nGB: %s\nMB: %s\nKB: %s',
-		((ended - started) / NS_PER_MS),startingMem.gb,startingMem.mb,startingMem.kb,endMem.gb,endMem.mb,endMem.kb
-	))
+	conn.logger:info(fmt('\nTest Took:    %s\nPre Testing:  %s\nPost Testing: %s', normalize_ms(ended - started), startingMem, endMem))
 end
