@@ -2,7 +2,6 @@
 local uv = require('uv')
 local ssl = require('openssl')
 local pp = require('pretty-print')
-local logger = require('./logger.lua')
 
 local cg = collectgarbage
 local fmt = string.format
@@ -34,7 +33,7 @@ end
 
 return function(conn)
 	local started = uv.hrtime()
-	logger.debug('Starting 2000 query stress test')
+	conn.logger:info('Starting 2000 query stress test')
 	local startingMem = getMem()
 	local reql = conn.reql
 	local name = ssl.base64(ssl.random(40)):gsub('=',''):gsub('/',''):gsub('+','')
@@ -52,7 +51,7 @@ return function(conn)
 	reql().dbDrop(name).run()
 	local endMem = getMem()
 	local ended = uv.hrtime()
-	logger.debug(fmt('\nTest took: %s\n\nMem before testing:\nGB: %s\nMB: %s\nKB: %s\n\nMem post testing:\nGB: %s\nMB: %s\nKB: %s',
+	conn.logger:info(fmt('\nTest took: %s\n\nMem before testing:\nGB: %s\nMB: %s\nKB: %s\n\nMem post testing:\nGB: %s\nMB: %s\nKB: %s',
 		((ended - started) / NS_PER_MS),startingMem.gb,startingMem.mb,startingMem.kb,endMem.gb,endMem.mb,endMem.kb
 	))
 end

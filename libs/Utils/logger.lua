@@ -12,7 +12,7 @@ local types = {
 	[2] = '[WARNING]',
 	[3] = '[ERROR]  ',
 	[4] = '[DEBUG]  ',
-	[5] = '[H ERROR]',
+	[5] = '[HARDERR]',
 }
 
 function write(typeOf, data)
@@ -32,38 +32,50 @@ function logger.setFile(fileName)
 		closeSync(logger._opened)
 	end
 	logger._file = fileName
-	logger.info('Set file to: '..tostring(fileName))
+	logger:info('Set file to: '..tostring(fileName))
 end
 
-function logger.err(sig)
+function logger:err(sig)
+	if self ~= logger then sig = self end
+	
 	sig = sig or '?'
 	write(types[3], sig)
 	print(date(datetime) .. ' | ' .. fmt('\27[1;31m%s\27[0m | %s', types[3], sig))
 	emitter:fire('error')
 end
 
-function logger.harderr(sig)
+function logger:harderr(sig)
+	if self ~= logger then sig = self end
+	
 	sig = sig or '?'
 	write(types[5], sig)
 	print(date(datetime) .. ' | ' .. fmt('\27[1;31m%s\27[0m | %s', types[5], sig))
 	process:exit(1)
 end
 
-function logger.warn(sig)
+function logger:warn(sig)
+	if self ~= logger then sig = self end
+	
 	sig = sig or '?'
 	write(types[2], sig)
 	print(date(datetime) .. ' | ' .. fmt('\27[1;33m%s\27[0m | %s', types[2], sig))
 	emitter:fire('warn', sig)
 end
 
-function logger.info(sig)
+function logger:info(sig)
+	if self ~= logger then sig = self end
+	
 	sig = sig or '?'
 	write(types[1], sig)
 	print(date(datetime) .. ' | ' .. fmt('\27[1;32m%s\27[0m | %s', types[1], sig))
 	emitter:fire('info', sig)
 end
 
-function logger.debug(sig)
+function logger:debug(sig)
+	if self ~= logger then sig = self end
+
+	if logger.options and not logger.options.debug then return end
+
 	sig = sig or '?'
 	write(types[4], sig)
 	print(date(datetime) .. ' | ' .. fmt('\27[1;36m%s\27[0m | %s', types[4], sig))

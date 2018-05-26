@@ -234,13 +234,9 @@ function newReql(conn)
 		local changes = reql._data.changes
 		if is and not changes then
 			x = function(...)
-				if reql.conn._options.debug then	
-					logger.debug('Resuming thread [' .. token .. ']')
-				end
+				reql.conn.logger:debug('Resuming thread [' .. token .. ']')
 				cmanager:resume(token, ...)
-				if reql.conn._options.debug then
-					logger.debug('Resumed thread [' .. token.. ']')
-				end
+				reql.conn.logger:debug('Resumed thread [' .. token.. ']')
 			end
 		end
 		assert(type(x) == 'function', 'bad argument #2 to reql.run(), function expected, got ' .. type(x))

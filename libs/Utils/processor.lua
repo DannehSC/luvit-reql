@@ -22,8 +22,9 @@ function processor.processData(data)
 		local rest = data:sub(13)
 		local dat
 		local todat = processor.cbs[token]
+		
 		if not todat then
-			logger.warn('Invalid data token, resp code: '..respn)
+			logger:warn('Invalid data token, resp code: '..respn)
 			return
 		end
 		if todat.raw then
@@ -42,14 +43,12 @@ function processor.processData(data)
 						dat = dat[1]
 					end
 				else
-					logger.warn(string.format('Bad JSON: %s', rest))
+					logger:warn(string.format('Bad JSON: %s', rest))
 					dat = rest
 				end
 			end
 		end
-		if todat.conn._options.debug then
-			logger.debug('Response num 1 received.')
-		end
+		todat.conn.logger:debug('Response num 1 received.')
 		todat.f(dat)
 		if not todat.keepAlive then
 			processor.cbs[token] = nil
@@ -68,25 +67,19 @@ function processor.processData(data)
 		local dat
 		local todat = processor.cbs[token]
 		if not todat then 
-			logger.warn('Invalid data token, resp code: '..respn)
+			logger:warn('Invalid data token, resp code: '..respn)
 			return
 		end
-		if todat.conn._options.debug then
-			logger.debug('Response num 2 received.')
-		end
+		todat.conn.logger:debug('Response num 2 received.')
 		todat.f(buffer)
-		if todat.conn._options.debug then
-			logger.debug('Response num 2 fired function.')
-		end
+			todat.conn.logger:debug('Response num 2 fired function.')
 		if not todat.keepAlive then
 			processor.cbs[token] = nil
 		end
 		buffers[token] = nil
 	elseif respn == 3 then
 		local conn = processor.cbs[token].conn
-		if conn._options.debug then
-			logger.debug('Response num 3 received. Attempting to continue.')
-		end
+		conn.logger:debug('Response num 3 received. Attempting to continue.')
 		coroutine.wrap(function()
 			local query = conn.reql().continue()
 			query._data.__overridetoken__ = token
@@ -105,18 +98,16 @@ function processor.processData(data)
 	elseif errcodes[respn] then
 		local ec = errcodes[respn]
 		local err = ec.f(ec.t)
-		logger.warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
+		logger:warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
 		if processor.cbs[token]then
 			local d = processor.cbs[token]
-			if d.conn._options.debug then
-				logger.debug('Encoded query: ' .. d.encoded)
-				logger.debug('Line calling reql.run: ' .. d.caller.currentline)
-			end
+			d.conn.logger:debug('Encoded query: ' .. d.encoded)
+			d.conn.logger:debug('Line calling reql.run: ' .. d.caller.currentline)
 			d.f(nil, err, json.decode(data:sub(13)))
 			processor.cbs[token] = nil
 		end
 	else
-		logger.warn(string.format('Unknown response: %s', tostring(respn)))
+		logger:warn(string.format('Unknown response: %s', tostring(respn)))
 		if not data then
 			data = 'no data?'
 		else
