@@ -2,11 +2,10 @@
 local fs = require('fs')
 local emitter = require('./emitter.lua')
 
-local fmt, date = string.format, os.date
+local f, date = string.format, os.date
 local openSync, writeSync, closeSync = fs.openSync, fs.writeSync, fs.closeSync
 local datetime = '%F %T'
 
-local logger = { }
 local types = {
 	[1] = '[INFO]   ',
 	[2] = '[WARNING]',
@@ -15,7 +14,7 @@ local types = {
 	[5] = '[HARDERR]',
 }
 
-function write(typeOf, data)
+function write(logger, typeOf, data)
 	if logger._file ~= false then
 		local file
 		if logger._opened == nil then
@@ -27,7 +26,9 @@ function write(typeOf, data)
 	end
 end
 
-function logger.setFile(fileName)
+local function setFile(logger, fileName)
+	if self ~= logger then sig = self end
+	
 	if logger._opened then
 		closeSync(logger._opened)
 	end
@@ -35,51 +36,87 @@ function logger.setFile(fileName)
 	logger:info('Set file to: '..tostring(fileName))
 end
 
-function logger:err(sig)
-	if self ~= logger then sig = self end
-	
-	sig = sig or '?'
-	write(types[3], sig)
-	print(date(datetime) .. ' | ' .. fmt('\27[1;31m%s\27[0m | %s', types[3], sig))
-	emitter:fire('error')
+local function info(logger, fmt, ...)
+	fmt = fmt:format(...)
+
+	write(logger, types[1], fmt)
+	print(date(datetime) .. ' | ' .. f('\27[1;32m%s\27[0m | %s', types[1], fmt))
+	emitter:fire('info', fmt)
 end
 
-function logger:harderr(sig)
-	if self ~= logger then sig = self end
-	
-	sig = sig or '?'
-	write(types[5], sig)
-	print(date(datetime) .. ' | ' .. fmt('\27[1;31m%s\27[0m | %s', types[5], sig))
+local function warn(logger, fmt, ...)
+	fmt = fmt:format(...)
+
+	write(logger, types[2], fmt)
+	print(date(datetime) .. ' | ' .. f('\27[1;33m%s\27[0m | %s', types[2], fmt))
+	emitter:fire('warn', fmt)
+end
+
+local function err(logger, fmt, ...)
+	fmt = fmt:format(...)
+
+	write(logger, types[3], fmt)
+	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[3], fmt))
+	emitter:fire('error', fmt)
+end
+
+local function debug(logger, fmt, ...)
+	fmt = fmt:format(...)
+
+	write(logger, types[4], fmt)
+	print(date(datetime) .. ' | ' .. f('\27[1;36m%s\27[0m | %s', types[4], fmt))
+	emitter:fire('debug', fmt)
+end
+
+local function harderr(logger, fmt, ...)
+	fmt = fmt:format(...)
+
+	write(logger, types[5], fmt)
+	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[5], fmt))
+	emitter:fire('hard-error', fmt)
 	process:exit(1)
 end
 
-function logger:warn(sig)
-	if self ~= logger then sig = self end
-	
-	sig = sig or '?'
-	write(types[2], sig)
-	print(date(datetime) .. ' | ' .. fmt('\27[1;33m%s\27[0m | %s', types[2], sig))
-	emitter:fire('warn', sig)
+return function()
+	local logger = { }
+
+	function logger:setFile(name)
+		if self ~= logger then name = self end
+		
+		return setFile(logger, name)
+	end
+
+	function logger:info(fmt, ...)
+		if self ~= logger then
+			return info(logger, self, fmt, ...)
+		else
+			return info(logger, fmt, ...)
+		end
+	end
+
+	function logger:warn(fmt, ...)
+		if self ~= logger then
+			return warn(logger, self, fmt, ...)
+		else
+			return warn(logger, fmt, ...)
+		end
+	end
+
+	function logger:err(fmt, ...)
+		if self ~= logger then
+			return err(logger, self, fmt, ...)
+		else
+			return err(logger, fmt, ...)
+		end
+	end
+
+	function logger:debug(fmt, ...)
+		if self ~= logger then
+			return debug(logger, self, fmt, ...)
+		else
+			return debug(logger, fmt, ...)
+		end
+	end
+
+	return logger
 end
-
-function logger:info(sig)
-	if self ~= logger then sig = self end
-	
-	sig = sig or '?'
-	write(types[1], sig)
-	print(date(datetime) .. ' | ' .. fmt('\27[1;32m%s\27[0m | %s', types[1], sig))
-	emitter:fire('info', sig)
-end
-
-function logger:debug(sig)
-	if self ~= logger then sig = self end
-
-	if logger.options and not logger.options.debug then return end
-
-	sig = sig or '?'
-	write(types[4], sig)
-	print(date(datetime) .. ' | ' .. fmt('\27[1;36m%s\27[0m | %s', types[4], sig))
-	emitter:fire('debug', sig)
-end
-
-return logger
