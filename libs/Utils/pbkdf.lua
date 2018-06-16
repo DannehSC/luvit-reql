@@ -19,7 +19,7 @@ local function pbkdf(digest, password, salt, iteration, dkLen)
 
 	local l = ceil(dkLen / hLen)
 
-	local T = {}
+	local T = { }
 
 	for i = 1, l do
 		local bytes = pack('!1>I4', fmod(i, 2 ^ (8 * 4)))

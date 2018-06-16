@@ -5,13 +5,13 @@ local logger = require('./logger.lua')()
 local errors = require('../error.lua')
 
 local errcodes = {
-	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },
+	[16] = { t = 'CLIENT_ERROR',  f = errors.ReqlDriverError  },
 	[17] = { t = 'COMPILE_ERROR', f = errors.ReqlCompileError },
 	[18] = { t = 'RUNTIME_ERROR', f = errors.ReqlRuntimeError },
 }
-local processor = { cbs = {} }
 
-local buffers = {}
+local processor = { cbs = { } }
+local buffers = { }
 
 local int = intlib.byte_to_int
 function processor.processData(data)
@@ -57,11 +57,11 @@ function processor.processData(data)
 		if not buffers[token] then
 			buffers[token] = {
 				chunks = true,
-				data = {},
+				data = { },
 			}
 		end
 		local buffer = buffers[token]
-		for i,v in pairs(json.decode(data:sub(13)).r) do
+		for i, v in pairs(json.decode(data:sub(13)).r) do
 			table.insert(buffer.data, v)
 		end
 		local dat
@@ -83,7 +83,7 @@ function processor.processData(data)
 		coroutine.wrap(function()
 			local query = conn.reql().continue()
 			query._data.__overridetoken__ = token
-			query.run({_dont = true})
+			query.run({ _dont = true })
 		end)()
 		local tab = json.decode(data:sub(13))
 		if not buffers[token] then
@@ -92,7 +92,7 @@ function processor.processData(data)
 				data = {}
 			}
 		end
-		for i,v in pairs(tab.r) do
+		for i, v in pairs(tab.r) do
 			table.insert(buffers[token].data, v)
 		end
 	elseif errcodes[respn] then

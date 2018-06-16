@@ -1,5 +1,5 @@
 
-local ReqlError = {}
+local ReqlError = { }
 
 local hierarchy = {
 	ReqlCompileError = 'ReqlError',
@@ -56,6 +56,4 @@ function ReqlError:__index(index)
 	end
 end
 
-ReqlError = setmetatable({}, ReqlError)
-
-return ReqlError
+return setmetatable({ }, ReqlError)
