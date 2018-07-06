@@ -82,7 +82,7 @@ local function harderr(logger, fmt, ...)
 	local tb = debuglib.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
 
 	write(logger, types[5], fmt .. tb)
-	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt .. tb))
+	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, tb))
 	emitter:fire('hard-error', fmt)
 	return error(fmt)
 end
