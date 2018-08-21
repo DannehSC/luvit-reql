@@ -90,7 +90,6 @@ local function encode(reql)
 		return error('ReQL table passed to query encoder, no database present.')
 	end
 	local str = ''
-	local js
 	for i = 1, #index do
 		local v = index[i]
 		local dat = reql._data[v]

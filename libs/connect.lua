@@ -220,8 +220,9 @@ function connect(options, callback, logger)
 	conn.test = function()
 		if checkCoroutine() then
 			require('./Utils/test.lua')(conn)
-		else
-			require('./Utils/asynctest.lua')(conn)
+        else
+            print('async test is not supported yet..')
+			-- require('./Utils/asynctest.lua')(conn)
 		end
 	end
 
