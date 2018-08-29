@@ -64,6 +64,7 @@ local function err(logger, fmt, ...)
 	emitter:fire('error', fmt)
 end
 
+local debuglib = debug -- good function names
 local function debug(logger, fmt, ...)
 	if logger.options and not logger.options.debug then return end
 
@@ -78,11 +79,12 @@ end
 local function harderr(logger, fmt, ...)
 	fmt = tostring(fmt)
 	fmt = fmt:format(...)
+	local tb = debuglib.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
 
-	write(logger, types[5], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[5], fmt))
+	write(logger, types[5], fmt .. tb)
+	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, tb))
 	emitter:fire('hard-error', fmt)
-	process:exit(1)
+	return error(fmt)
 end
 
 return function()
@@ -123,6 +125,30 @@ return function()
 			return debug(logger, self, fmt, ...)
 		else
 			return debug(logger, fmt, ...)
+		end
+	end
+
+	function logger:harderr(fmt, ...)
+		if self ~= logger then
+			return harderr(logger, self, fmt, ...)
+		else
+			return harderr(logger, fmt, ...)
+		end
+	end
+
+	function logger:assert(truthy, fmt, ...)
+		if self ~= logger then
+			if self then
+				return self, truthy, fmt, ...
+			else
+				return harderr(logger, self, fmt, ...)
+			end
+		else
+			if truthy then
+				return truthy, fmt, ...
+			else
+				return harderr(logger, fmt, ...)
+			end
 		end
 	end
 
