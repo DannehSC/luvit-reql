@@ -40,16 +40,27 @@ local function decoder()
 	local len
 	local data_buffer = { }
 	local total_len = 0
-	return function(buffer)
-		local head = buffer:match('(............){"t":%d%d?,"')
+
+	local accept
+	function accept(buffer, chunks)
+		chunks = chunks or { }
+
+		local other = buffer:find('%]}............{"t":%d%d?,"', 26)
+		if other then
+			accept(buffer:sub(other + 2), chunks)
+			buffer = buffer:sub(1, other + 1)
+		end
+
+		local head = buffer:match('^(............){"t":%d%d?,"')
 
 		if head then
 			len = string.unpack('<I4', head:sub(-4)) + 12
+			data_buffer = { }
 		end
 
 		if len then
 			if #buffer == len then
-				return buffer
+				chunks[#chunks + 1] = buffer
 			else
 				data_buffer[#data_buffer + 1] = buffer
 				total_len = total_len + #buffer
@@ -57,12 +68,20 @@ local function decoder()
 				if total_len == len then
 					total_len = 0
 					data_buffer = { }
-					return table.concat(data_buffer, '')
+					chunks[#chunks + 1] = table.concat(data_buffer)
 				end
 			end
 		else
-			return buffer
+			chunks[#chunks + 1] = buffer
 		end
+
+		if #chunks > 0 then
+			return chunks
+		end
+	end
+
+	return function(buffer)
+		return accept(buffer)
 	end
 end
 
@@ -101,7 +120,7 @@ function connect(options, callback, logger)
 		-- Initiation (First Client Message/First Server Challenge)
 		write(string.pack('<I', 0x34c2bdc3))
 
-		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: "res" unused variable
+		local success, res = pcall(function() return json.decode(read()[1]) end) -- NOTE: "res" unused variable
 		if not success then
 			socket.close()
 			return logger:err(errors.ReqlDriverError('Error reading JSON data.'))
@@ -117,7 +136,7 @@ function connect(options, callback, logger)
 		}) .. '\0')
 
 		-- Second Server Challenge
-		res = json.decode(read())
+		res = json.decode(read()[1])
 		if not res.success then
 			socket.close()
 			return logger:err(errors.ReqlAuthError('Error: ' .. res.error))
@@ -151,7 +170,7 @@ function connect(options, callback, logger)
 		}) .. '\0')
 
 		-- Third Server Challenge
-		res = json.decode(read())
+		res = json.decode(read()[1])
 		if not res.success then
 			socket.close()
 			logger:debug(dump(res))
@@ -177,8 +196,11 @@ function connect(options, callback, logger)
 		emitter:fire('connected')
 		coroutine.wrap(function()
 			for data in read do
-				process(data)
-			end
+				for _, chunk in next, data do
+					process(chunk)
+				end
+            end
+            
 			socket.closed = true
 			logger:warn(format('Connection to %s:%s closed.', addr, options.port))
 			if options.reconnect then
