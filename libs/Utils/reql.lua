@@ -29,7 +29,7 @@ function newReql(conn)
 		assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		assert(not reql.ran, 'ReQL instance already ran.')
 		reql._data.get = id
-		reql._data.megaSuperGetData = true
+		reql._data.isGet = true
 		return reql
 	end
 	function reql.getField(field)
