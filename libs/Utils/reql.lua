@@ -103,7 +103,7 @@ function newReql(conn)
 			reql.insert(tab)
 		else
 			local id = tab.id
-			--tab.id=nil
+			-- tab.id=nil
 			reql.get(id).replace(tab)
 		end
 		return reql
@@ -119,7 +119,7 @@ function newReql(conn)
 			reql.insert(tab)
 		else
 			local id = tab.id
-			tab.id = nil
+			-- tab.id = nil
 			reql.get(id).update(tab)
 		end
 		return reql
