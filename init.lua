@@ -42,7 +42,7 @@ return {
         end
         
 		logger.options = options
-        logger._file = options.file
+        logger:setFile(options.file)
         
 		if options.address:sub(#options.address) == '/' then
 			options.address = options.address:sub(1, #options.address - 1)
