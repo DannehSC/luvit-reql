@@ -2,12 +2,12 @@
 local running, yield, resume = coroutine.running, coroutine.yield, coroutine.resume
 
 local manager = {
-	threads = {}
+	threads = { }
 }
 
 function manager:isCoro()
-	local _, bool = running()
-	return not bool
+	local thread, main = running()
+	return not main
 end
 
 function manager:yield(id)

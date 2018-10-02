@@ -39,16 +39,19 @@ return {
 			if options[k] == nil then
 				options[k] = v
 			end
-		end
+        end
+        
 		logger.options = options
-		logger._file = options.file
+        logger._file = options.file
+        
 		if options.address:sub(#options.address) == '/' then
 			options.address = options.address:sub(1, #options.address - 1)
 		end
 		if not find(options.address, 'https?', 1) == 1 then
 			logger:warn('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
-		end
+        end
+        
 		return connect(options, callback, logger)
 	end,
 

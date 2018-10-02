@@ -9,7 +9,7 @@ return {
 	end,
 	
 	int_to_bytes = function(num, bytes)
-		local res = {}
+		local res = { }
 		num = math.fmod(num, 2 ^ (8 * bytes))
 		for k = bytes, 1, -1 do
 			local den = 2 ^ (8 * (k - 1))
