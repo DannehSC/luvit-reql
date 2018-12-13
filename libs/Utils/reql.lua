@@ -93,22 +93,17 @@ function newReql(conn)
 		return reql
 	end
 	function reql.inOrRe(tab)
+		reql.conn.logger:warn('AS OF LUVIT-REQL 1.0.6, inOrRe AND inOrUp ARE DEPRECATED. THEY SHALL BE REMOVED IN V1.0.8 SO PLEASE ADJUST YOUR CODE ACCORDINGLY. NORMAL REPLACE IS THE SAME AS inOrRe.)
 		reql.conn.logger:assert(type(tab) == 'table', 'bad argument #1 to reql.inOrRe, table expected.')
 		reql.conn.logger:assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		reql.conn.logger:assert(not reql.ran, 'ReQL instance already ran.')
 		reql.conn.logger:assert(tab.id ~= nil, 'argument \'id\' not passed to inOrRe')
 		reql.conn.logger:assert(cmanager:isCoro(), 'reql.inOrRe not ran in coroutine.')
-		local exists = newReql(conn).db(reql._data.db or reql.conn._options.db).table(reql._data.table).get(tab.id).run({ raw = true })
-		if exists == nil then
-			reql.insert(tab)
-		else
-			local id = tab.id
-			-- tab.id=nil
-			reql.get(id).replace(tab)
-		end
+		reql.get(id).replace(tab)
 		return reql
 	end
 	function reql.inOrUp(tab)
+		reql.conn.logger:warn('AS OF LUVIT-REQL 1.0.6, inOrRe AND inOrUp ARE DEPRECATED. THEY SHALL BE REMOVED IN V1.0.8 SO PLEASE ADJUST YOUR CODE ACCORDINGLY.')
 		reql.conn.logger:assert(type(tab) == 'table', 'bad argument #1 to reql.inOrUp, table expected.')
 		reql.conn.logger:assert(reql._data.usable, 'ReQL instance unusable, please run or start a new instance.')
 		reql.conn.logger:assert(not reql.ran, 'ReQL instance already ran.')
@@ -119,7 +114,6 @@ function newReql(conn)
 			reql.insert(tab)
 		else
 			local id = tab.id
-			-- tab.id = nil
 			reql.get(id).update(tab)
 		end
 		return reql
