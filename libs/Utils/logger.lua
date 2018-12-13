@@ -15,114 +15,100 @@ local types = {
 }
 
 local function write(logger, typeOf, data)
-	if type(logger._file) == 'string' then
-		local file
-		if logger._opened == nil then
-			file = openSync(logger._file, 'a')
-			logger._opened = file
-		else
-			file = logger._opened
-		end
-		writeSync(file, -1, f('%s | %s | %s\n', date(datetime), typeOf, data))
-	end
-end
-
-local function setFile(logger, fileName)
-	if self ~= logger then sig = self end
-	
-	if logger._opened then
-		closeSync(logger._opened)
-	end
-	logger._file = fileName
-	logger:info('Set file to: '..tostring(fileName))
-end
-
-local function info(logger, fmt, ...)
-	fmt = tostring(fmt)
-	fmt = fmt:format(...)
-
-	write(logger, types[1], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;32m%s\27[0m | %s', types[1], fmt))
-	emitter:fire('info', fmt)
-end
-
-local function warn(logger, fmt, ...)
-	fmt = tostring(fmt)
-	fmt = fmt:format(...)
-
-	write(logger, types[2], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;33m%s\27[0m | %s', types[2], fmt))
-	emitter:fire('warn', fmt)
-end
-
-local function err(logger, fmt, ...)
-	fmt = tostring(fmt)
-	fmt = fmt:format(...)
-
-	write(logger, types[3], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[3], fmt))
-	emitter:fire('error', fmt)
-end
-
-local function debug(logger, fmt, ...)
-	if logger.options and not logger.options.debug then return end
-
-	fmt = tostring(fmt)
-	fmt = fmt:format(...)
-
-	write(logger, types[4], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;36m%s\27[0m | %s', types[4], fmt))
-	emitter:fire('debug', fmt)
-end
-
-local function harderr(logger, fmt, ...)
-	fmt = tostring(fmt)
-	fmt = fmt:format(...)
-
-	write(logger, types[5], fmt)
-	print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[5], fmt))
-	emitter:fire('hard-error', fmt)
-	process:exit(1)
+    if logger._file then
+        return writeSync(logger._file, -1, f('%s | %s | %s\n', date(datetime), typeOf, data))
+    end
 end
 
 return function()
 	local logger = { }
 
-	function logger:setFile(name)
-		if self ~= logger then name = self end
-		
-		return setFile(logger, name)
+    function logger:setFile(name)
+        if self._file then closeSync(self._file) end
+
+        self._file = openSync(fileName)
+        self:debug('Set file to: ' .. tostring(fileName))
 	end
 
 	function logger:info(fmt, ...)
-		if self ~= logger then
-			return info(logger, self, fmt, ...)
-		else
-			return info(logger, fmt, ...)
-		end
+        fmt = tostring(fmt):format(...)
+
+		write(self, types[1], fmt)
+        print(date(datetime) .. ' | ' .. f('\27[1;32m%s\27[0m | %s', types[1], fmt))
+        emitter:fire('info', fmt)
 	end
 
 	function logger:warn(fmt, ...)
-		if self ~= logger then
-			return warn(logger, self, fmt, ...)
-		else
-			return warn(logger, fmt, ...)
-		end
+        fmt = tostring(fmt):format(...)
+
+		write(self, types[2], fmt)
+        print(date(datetime) .. ' | ' .. f('\27[1;33m%s\27[0m | %s', types[2], fmt))
+        emitter:fire('warn', fmt)
 	end
 
 	function logger:err(fmt, ...)
-		if self ~= logger then
-			return err(logger, self, fmt, ...)
-		else
-			return err(logger, fmt, ...)
-		end
+        fmt = tostring(fmt):format(...)
+
+        write(self, types[3], fmt)
+        print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s', types[3], fmt))
+        emitter:fire('error', fmt)
 	end
 
 	function logger:debug(fmt, ...)
+        if self.options and not self.options.debug then return end
+
+        fmt = tostring(fmt):format(...)
+
+        write(self, types[4], fmt)
+        print(date(datetime) .. ' | ' .. f('\27[1;36m%s\27[0m | %s', types[4], fmt))
+        emitter:fire('debug', fmt)
+	end
+
+	function logger:harderr(fmt, ...)
+        fmt = tostring(fmt):format(...)
+        local trace = debug.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
+
+        write(self, types[5], fmt .. tb)
+        print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, trace))
+        emitter:fire('hard-error', fmt)
+        return error(fmt)
+	end
+
+	function logger:assert(truthy, fmt, ...)
+        if truthy then
+            return truthy, fmt
+        else
+            fmt = tostring(fmt):format(...)
+            local trace = debug.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
+
+            write(self, types[5], fmt .. tb)
+            print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, trace))
+            emitter:fire('hard-error', fmt)
+            return error(fmt)
+        end
+	end
+
+	function logger:harderr(fmt, ...)
 		if self ~= logger then
-			return debug(logger, self, fmt, ...)
+			return harderr(logger, self, fmt, ...)
 		else
-			return debug(logger, fmt, ...)
+			return harderr(logger, fmt, ...)
+		end
+	end
+
+	function logger:assert(truthy, fmt, ...)
+		if self ~= logger then
+			if self then
+				return self, truthy, fmt, ...
+			else
+				return harderr(logger, self, fmt, ...)
+			end
+		else
+			if truthy then
+				return truthy, fmt, ...
+			else
+				return harderr(logger, fmt, ...)
+			end
 		end
 	end
 

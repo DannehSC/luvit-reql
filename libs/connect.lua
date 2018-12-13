@@ -28,28 +28,31 @@ local function new_token()
 	return get_token
 end
 
-local function copy(t)
-	local n = {}
-	for k, v in pairs(t) do
-		n[k] = v
-	end
-	return n
-end
-
 local function decoder()
 	local len
 	local data_buffer = { }
 	local total_len = 0
-	return function(buffer)
-		local head = buffer:match('(............){"t":%d%d?,"')
+
+	local accept
+	function accept(buffer, chunks)
+		chunks = chunks or { }
+
+		local other = buffer:find('%]}............{"t":%d%d?,"', 26)
+		if other then
+			accept(buffer:sub(other + 2), chunks)
+			buffer = buffer:sub(1, other + 1)
+		end
+
+		local head = buffer:match('^(............){"t":%d%d?,"')
 
 		if head then
 			len = string.unpack('<I4', head:sub(-4)) + 12
+			data_buffer = { }
 		end
 
 		if len then
 			if #buffer == len then
-				return buffer
+				chunks[#chunks + 1] = buffer
 			else
 				data_buffer[#data_buffer + 1] = buffer
 				total_len = total_len + #buffer
@@ -57,12 +60,20 @@ local function decoder()
 				if total_len == len then
 					total_len = 0
 					data_buffer = { }
-					return table.concat(data_buffer, '')
+					chunks[#chunks + 1] = table.concat(data_buffer)
 				end
 			end
 		else
-			return buffer
+			chunks[#chunks + 1] = buffer
 		end
+
+		if #chunks > 0 then
+			return chunks
+		end
+	end
+
+	return function(buffer)
+		return accept(buffer)
 	end
 end
 
@@ -72,16 +83,14 @@ function connect(options, callback, logger)
 		closed = false
 	}
 	local addr = options.address
-	addr = addr:gsub('https://', '')
-	addr = addr:gsub('http://', '')
+	addr = addr:gsub('https?://', '')
 
-	local function connectToRethinkdb()
-		local opt = copy(options)
-		local stuff = {net.connect({
+	local function connectToRethinkdb(conn)
+		local stuff = { net.connect({
 			host = addr,
 			port = options.port,
 			decode = decoder()
-		})}
+		}) }
 
 		logger:info(format('Connecting to %s:%s', addr, options.port))
 		local read, write, close = stuff[1], stuff[2], stuff[6]
@@ -94,14 +103,14 @@ function connect(options, callback, logger)
 		socket.close = function()
 			socket.closed = true
 			close()
-			emitter:fire('quit')
+			emitter:fire('close')
 		end
 		local user, auth_key = options.user, options.password
 
 		-- Initiation (First Client Message/First Server Challenge)
 		write(string.pack('<I', 0x34c2bdc3))
 
-		local success, res = pcall(function() return json.decode(read()) end) -- NOTE: "res" unused variable
+		local success = pcall(json.decode, read()[1])
 		if not success then
 			socket.close()
 			return logger:err(errors.ReqlDriverError('Error reading JSON data.'))
@@ -117,7 +126,7 @@ function connect(options, callback, logger)
 		}) .. '\0')
 
 		-- Second Server Challenge
-		res = json.decode(read())
+		res = json.decode(read()[1])
 		if not res.success then
 			socket.close()
 			return logger:err(errors.ReqlAuthError('Error: ' .. res.error))
@@ -128,7 +137,7 @@ function connect(options, callback, logger)
 			auth[k] = v
 		end
 		local i, j = auth.r:find(nonce, 1, true)
-		assert(i == 1 and j == #nonce, errors.ReqlDriverError('Invalid Nonce'))
+		logger:assert(i == 1 and j == #nonce, errors.ReqlDriverError('Invalid Nonce'))
 		auth.i = tonumber(auth.i)
 		local client_final_message = 'c=biws,r=' .. auth.r
 		local salt = ssl.base64(auth.s, false)
@@ -151,7 +160,7 @@ function connect(options, callback, logger)
 		}) .. '\0')
 
 		-- Third Server Challenge
-		res = json.decode(read())
+		res = json.decode(read()[1])
 		if not res.success then
 			socket.close()
 			logger:debug(dump(res))
@@ -167,22 +176,24 @@ function connect(options, callback, logger)
 		local server_key = skHMAC:final('Server Key', true)
 		local ssHMAC = ssl.hmac.new('sha256', server_key)
 		local server_signature = ssHMAC:final(auth_message, true)
-		if not compare_digest(auth.v, server_signature)then
+		if not compare_digest(auth.v, server_signature) then
 			socket.close()
 			return logger:err(errors.ReqlAuthError('Invalid server signature'))
 		end
 
 		logger:info(format('Connection to %s:%s complete.', addr, options.port))
 		socket.closed = false
-		emitter:fire('connected')
+		emitter:fire('connected', conn)
 		coroutine.wrap(function()
 			for data in read do
-				process(data)
+				for _, chunk in next, data do
+					process(chunk)
+				end
 			end
 			socket.closed = true
 			logger:warn(format('Connection to %s:%s closed.', addr, options.port))
 			if options.reconnect then
-				connect(opt)
+				connect(options, callback, logger)
 			end
 		end)()
 	end
@@ -208,24 +219,26 @@ function connect(options, callback, logger)
 	
 	conn.test = function()
 		if checkCoroutine() then
-			require('./Utils/test.lua')(conn)
-		else
-			require('./Utils/asynctest.lua')(conn)
+			require('./utils/test.lua')(conn)
+        else
+            print('asynchronous testing is not supported.')
 		end
 	end
 
 	if checkCoroutine() then
 		logger:debug('Running Luvit-ReQL in Sync Mode')
-		connectToRethinkdb()
+		connectToRethinkdb(conn)
+		
+		if callback then
+			coroutine.wrap(callback)(conn)
+		end
 
-		options.password = '<HIDDEN>'
 		return conn
 	else
 		logger:warn('Running Luvit-ReQL in Async Mode')
 		coroutine.wrap(function()
-			connectToRethinkdb()
+			connectToRethinkdb(conn)
 
-			options.password = '<HIDDEN>'
 			if type(callback) == 'function' then
 				callback(conn)
 			else

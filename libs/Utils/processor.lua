@@ -5,118 +5,97 @@ local logger = require('./logger.lua')()
 local errors = require('../error.lua')
 
 local errcodes = {
-	[16] = { t = 'CLIENT_ERROR', f = errors.ReqlDriverError },
-	[17] = { t = 'COMPILE_ERROR', f = errors.ReqlCompileError },
-	[18] = { t = 'RUNTIME_ERROR', f = errors.ReqlRuntimeError },
+	[16] = { type = 'CLIENT_ERROR',  new = errors.ReqlDriverError  },
+	[17] = { type = 'COMPILE_ERROR', new = errors.ReqlCompileError },
+	[18] = { type = 'RUNTIME_ERROR', new = errors.ReqlRuntimeError },
 }
-local processor = { cbs = {} }
 
-local buffers = {}
+local processor = { cbs = { } }
+local buffers = { }
 
 local int = intlib.byte_to_int
 function processor.processData(data)
-	local token = int(data:sub(1,8))
-	local respn = data:sub(13):match('"t":(%d?%d)')
-	respn = tonumber(respn)
-	if respn == 1 then
-		local rest = data:sub(13)
-		local dat
-		local todat = processor.cbs[token]
-		
-		if not todat then
-			logger:warn('Invalid data token, resp code: '..respn)
-			return
+	local token = int(data:sub(1, 8))
+    local response_code = tonumber(data:sub(13):match('"t":(%d?%d)'))
+    
+    if not processor.cbs[token] then
+        return logger:warn('invalid token "' .. token .. '", with response code: ' .. response_code)
+    end
+
+    local callback = processor.cbs[token]
+	if response_code == 1 then
+		local json_tbl = data:sub(13)
+		local dat      = json_tbl
+        
+        if dat:find('"r":%[null%]') then
+            dat = nil
+		elseif not callback.raw then
+            local response = json.decode(json_tbl)
+            if response then
+                dat = response.r
+                if callback.isGet then dat = dat[1] end
+            else
+                callback.conn.logger:warn('bad json: ' .. tostring(json_tbl))
+                dat = json_tbl
+            end
 		end
-		if todat.raw then
-			dat = rest
-			if dat:find('%"r%"%:%[null%]') then
-				dat = nil
-			end
-		else
-			if rest:find('%"r%"%:%[null%]') then
-				dat = nil
-			else
-				local theresp = json.decode(rest)
-				if theresp then
-					dat = theresp.r
-					if todat.getterWetter then
-						dat = dat[1]
-					end
-				else
-					logger:warn(string.format('Bad JSON: %s', rest))
-					dat = rest
-				end
-			end
-		end
-		todat.conn.logger:debug('Response num 1 received.')
-		todat.f(dat)
-		if not todat.keepAlive then
-			processor.cbs[token] = nil
-		end
-	elseif respn == 2 then
-		if not buffers[token] then
-			buffers[token] = {
-				chunks = true,
-				data = {},
-			}
-		end
+		callback.conn.logger:debug('response code 1 recieved for token "' .. token .. '"')
+        callback.f(dat)
+        
+		if not callback.keepAlive then processor.cbs[token] = nil end
+    elseif response_code == 2 then
+		buffers[token] = buffers[token] or { chunks = true, data = { } }
+        
 		local buffer = buffers[token]
-		for i,v in pairs(json.decode(data:sub(13)).r) do
-			table.insert(buffer.data, v)
-		end
-		local dat
-		local todat = processor.cbs[token]
-		if not todat then 
-			logger:warn('Invalid data token, resp code: '..respn)
-			return
-		end
-		todat.conn.logger:debug('Response num 2 received.')
-		todat.f(buffer)
-			todat.conn.logger:debug('Response num 2 fired function.')
-		if not todat.keepAlive then
+		local decoded = json.decode(data:sub(13))
+		for i, v in pairs(decoded.r) do table.insert(buffer.data, v) end
+        
+		callback.conn.logger:debug('response code 2 recieved for token "' .. token .. '"')
+		callback.f(buffer)
+
+		if not callback.keepAlive then
 			processor.cbs[token] = nil
-		end
+        end
+        
 		buffers[token] = nil
 	elseif respn == 3 then
-		local conn = processor.cbs[token].conn
-		conn.logger:debug('Response num 3 received. Attempting to continue.')
+		local conn = callback.conn
+        conn.logger:debug('response code 3 recieved for token "' .. token .. '", attempting to continue')
+        
 		coroutine.wrap(function()
 			local query = conn.reql().continue()
 			query._data.__overridetoken__ = token
-			query.run({_dont = true})
-		end)()
-		local tab = json.decode(data:sub(13))
-		if not buffers[token] then
-			buffers[token] = {
-				chunks = true,
-				data = {}
-			}
-		end
-		for i,v in pairs(tab.r) do
-			table.insert(buffers[token].data, v)
-		end
+			query.run({ _dont = true })
+        end)()
+        
+        buffers[token] = buffers[token] or { chunks = true, data = { } }
+        
+		local decoded = json.decode(data:sub(13))
+        
+		for i, v in pairs(decoded.r) do table.insert(buffers[token].data, v) end
 	elseif errcodes[respn] then
-		local ec = errcodes[respn]
-		local err = ec.f(ec.t)
-		logger:warn('Error encountered. Error code: ' .. respn .. ' | Error info: ' .. tostring(err))
-		if processor.cbs[token]then
-			local d = processor.cbs[token]
-			d.conn.logger:debug('Encoded query: ' .. d.encoded)
-			d.conn.logger:debug('Line calling reql.run: ' .. d.caller.currentline)
-			d.f(nil, err, json.decode(data:sub(13)))
-			processor.cbs[token] = nil
-		end
+		local errcode = errcodes[respn]
+        local err     = errcode.new(errcode.type)
+        
+        conn.logger:warn('Encountered an Error | response code ' .. response_code .. ' recieved for token "' .. token .. '", ' .. tostring(err))
+            
+        callback.conn.logger:debug('Encoded query: ' .. callback.encoded)
+        callback.conn.logger:debug('Line calling reql.run: ' .. callback.caller.currentline)
+        callback.f(nil, err, json.decode(data:sub(13)))
+        processor.cbs[token] = nil
 	else
-		logger:warn(string.format('Unknown response: %s', tostring(respn)))
+        conn.logger:warn('response code ' .. tostring(response_code) .. ' recieved for token "' .. token .. '", unknown response')
 		if not data then
 			data = 'no data?'
 		else
 			data = data:sub(13)
-		end
-		if processor.cbs[token] then
-			processor.cbs[token].f(nil, 'Unknown response', data)
+        end
+        
+		if callback then
+			processor.cbs[token].f(nil, 'unknown response', data)
 			processor.cbs[token] = nil
 		end
 	end
 end
+
 return processor

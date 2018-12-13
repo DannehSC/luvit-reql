@@ -1,63 +1,97 @@
 
-local ssl = require('openssl')
 local timer = require('timer')
-local cmanager = require('./coroutinemanager.lua')
 
-local emitter = {
-	callbacks = {}
-}
+local emitter = { listeners = { } }
 
-local function getId()
-	return ssl.base64(ssl.random(20), true)
+function emitter:on(event, listener, sync)
+	if not self.listeners[event] then self.listeners[event] = { } end
+	
+	table.insert(self.listeners[event], { fn = listener, sync = sync })
+	
+	return listener
 end
 
-function emitter:on(event, callback)
-	local id = getId()
-	emitter.callbacks[id] = {
-		event = event,
-		callback = callback,
-	}
-	return id
+function emitter:once(event, listener, sync)
+	if not self.listeners[event] then self.listeners[event] = { } end
+	
+	table.insert(self.listeners[event], { fn = listener, once = true, sync = sync })
+	
+	return listener
 end
 
-function emitter:once(event, callback)
-	local id
-	id = emitter:on(event, function(...)
-		emitter:del(id)
-		callback(...)
-	end)
-	return id
-end
+function emitter:listenerCount(event)
+	if event then
+		local listeners = self.listeners[event]
+		if not listeners then return 0 end
+		local n = 0
 
-function emitter:del(id)
-	if emitter.callbacks[id] then
-		emitter.callbacks[id] = nil
+		for _ in ipairs(listeners) do
+			n = n + 1
+		end
+
+		return n
+	else
+		local n = 0
+
+		for e in pairs(self.listeners) do
+			n = n + self:listenerCount(e)
+		end
+
+		return n
 	end
 end
 
-function emitter:fire(event,...)
-	for _, v in pairs(emitter.callbacks)do
-		if v.event:lower() == event then
-			v.callback(...)
+function emitter:remove(event, listener)
+	local listeners = self.listeners[event]
+	if not listeners then return end
+
+	for i, f in next, listeners do
+		if f == listener.fn then
+			table.remove(listeners, i)
 		end
 	end
 end
 
-function emitter:waitFor(event,timeout)
-	local id = getId()
-	local eid
-	if timeout then
-		coroutine.wrap(function()
-			timer.setTimeout(timeout,function()
-				eid:del(id)
-				cmanager:resume(id)
-			end)
-		end)()
+function emitter:removeAll(event)
+	self.listeners[event] = nil
+end
+
+function emitter:fire(event, ...)
+	local listeners = self.listeners[name]
+	if not listeners then return end
+
+	for _, listener in ipairs(listeners) do
+		local fn = listener.fn
+		if listener.once then
+			self:remove(event, fn)
+		end
+
+		if listener.sync then
+			fn(...)
+		else
+			coroutine.wrap(fn)(...)
+		end
 	end
-	eid = emitter:once(event,function()
-		cmanager:resume(id)
+end
+
+function emitter:waitFor(event, timeout, predicate)
+	local thread = coroutine.running()
+	local uv_timer
+	
+	local fn = self:once(name, function(...)
+		if predicate and not predicate(...) then return end
+		if uv_timer then
+			timer.clearTimeout(uv_timer)
+		end
+		return assert(coroutine.resume(thread, true, ...))
+	end, true)
+
+	uv_timer = timeout and timer.setTimeout(timeout, function()
+		self:remove(name, fn)
+		return assert(coroutine.resume(thread, false))
 	end)
-	return cmanager:yield(id)
+
+	return coroutine.yield()
 end
 
 return emitter
