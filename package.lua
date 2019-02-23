@@ -5,7 +5,7 @@ return {
 	tags = { "luvit", "rethinkdb", "database", "driver" },
 	license = "MIT",
 	author = { 
-		name = "DannehSC", email = "<nothankyou>" 
+		name = "DannehSC", email = "dangerspookycanyon@gmail.com" 
 	},
 	homepage = "https://github.com/DannehSC/luvit-reql",
 	dependencies = {
