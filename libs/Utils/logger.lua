@@ -26,8 +26,8 @@ return function()
     function logger:setFile(name)
         if self._file then closeSync(self._file) end
 
-        self._file = openSync(fileName)
-        self:debug('Set file to: ' .. tostring(fileName))
+        self._file = openSync(name)
+        self:debug('Set file to: ' .. tostring(name))
 	end
 
 	function logger:info(fmt, ...)

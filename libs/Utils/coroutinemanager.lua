@@ -19,7 +19,7 @@ end
 
 function manager:resume(id, ...)
 	if not self.threads[id] then return end
-	resume(self.threads[id], ...)
+	assert(resume(self.threads[id], ...))
 end
 
 return manager
