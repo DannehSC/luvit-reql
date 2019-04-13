@@ -88,29 +88,5 @@ return function()
         end
 	end
 
-	function logger:harderr(fmt, ...)
-		if self ~= logger then
-			return harderr(logger, self, fmt, ...)
-		else
-			return harderr(logger, fmt, ...)
-		end
-	end
-
-	function logger:assert(truthy, fmt, ...)
-		if self ~= logger then
-			if self then
-				return self, truthy, fmt, ...
-			else
-				return harderr(logger, self, fmt, ...)
-			end
-		else
-			if truthy then
-				return truthy, fmt, ...
-			else
-				return harderr(logger, fmt, ...)
-			end
-		end
-	end
-
 	return logger
 end
