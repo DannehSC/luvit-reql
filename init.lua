@@ -16,7 +16,8 @@ local default = {
 	reconnect = false,
 	reusable = false,
 	debug = false,
-	file = 'luvitreql.log'
+	quiet = false,
+	file = 'luvitreql.log',
 }
 
 local format = string.format
