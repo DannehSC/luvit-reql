@@ -1,6 +1,5 @@
 
 local json = require('json')
-local intlib = require('./intlib.lua')
 local logger = require('./logger.lua')()
 local errors = require('../error.lua')
 
@@ -13,9 +12,8 @@ local errcodes = {
 local processor = { cbs = { } }
 local buffers = { }
 
-local int = intlib.byte_to_int
 function processor.processData(data)
-	local token = int(data:sub(1, 8))
+	local token = string.unpack('<I8', data)
     local response_code = tonumber(data:sub(13):match('"t":(%d?%d)'))
 
     if not processor.cbs[token] then
