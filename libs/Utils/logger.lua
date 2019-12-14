@@ -68,7 +68,7 @@ return function()
         fmt = tostring(fmt):format(...)
         local trace = debug.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
 
-        write(self, types[5], fmt .. tb)
+        write(self, types[5], fmt .. trace)
         print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, trace))
         emitter:fire('hard-error', fmt)
         return error(fmt)
@@ -78,13 +78,7 @@ return function()
         if truthy then
             return truthy, fmt
         else
-            fmt = tostring(fmt):format(...)
-            local trace = debug.traceback('', 2):gsub('stack traceback:\n(.+)', '%1')
-
-            write(self, types[5], fmt .. tb)
-            print(date(datetime) .. ' | ' .. f('\27[1;31m%s\27[0m | %s %s', types[5], fmt, trace))
-            emitter:fire('hard-error', fmt)
-            return error(fmt)
+            return self:harderr(fmt, ...)
         end
 	end
 

@@ -17,7 +17,7 @@ local int = intlib.byte_to_int
 function processor.processData(data)
 	local token = int(data:sub(1, 8))
     local response_code = tonumber(data:sub(13):match('"t":(%d?%d)'))
-    
+
     if not processor.cbs[token] then
         return logger:warn('invalid token "' .. token .. '", with response code: ' .. response_code)
     end
@@ -26,7 +26,7 @@ function processor.processData(data)
 	if response_code == 1 then
 		local json_tbl = data:sub(13)
 		local dat      = json_tbl
-        
+
         if dat:find('"r":%[null%]') then
             dat = nil
 		elseif not callback.raw then
@@ -41,43 +41,42 @@ function processor.processData(data)
 		end
 		callback.conn.logger:debug('response code 1 recieved for token "' .. token .. '"')
         callback.f(dat)
-        
+
 		if not callback.keepAlive then processor.cbs[token] = nil end
     elseif response_code == 2 then
 		buffers[token] = buffers[token] or { chunks = true, data = { } }
-        
+
 		local buffer = buffers[token]
 		local decoded = json.decode(data:sub(13))
 		for i, v in pairs(decoded.r) do table.insert(buffer.data, v) end
-        
+
 		callback.conn.logger:debug('response code 2 recieved for token "' .. token .. '"')
 		callback.f(buffer)
 
 		if not callback.keepAlive then
 			processor.cbs[token] = nil
         end
-        
+
 		buffers[token] = nil
-	elseif respn == 3 then
-		local conn = callback.conn
-        conn.logger:debug('response code 3 recieved for token "' .. token .. '", attempting to continue')
-        
+	elseif response_code == 3 then
+        callback.conn.logger:debug('response code 3 recieved for token "' .. token .. '", attempting to continue')
+
 		coroutine.wrap(function()
-			local query = conn.reql().continue()
+			local query = callback.conn.reql().continue()
 			query._data.__overridetoken__ = token
 			query.run({ _dont = true })
         end)()
-        
+
         buffers[token] = buffers[token] or { chunks = true, data = { } }
-        
+
 		local decoded = json.decode(data:sub(13))
-        
+
 		for i, v in pairs(decoded.r) do table.insert(buffers[token].data, v) end
-	elseif errcodes[respn] then
-		local errcode = errcodes[respn]
+	elseif errcodes[response_code] then
+		local errcode = errcodes[response_code]
         local err     = errcode.new(errcode.type)
         local decoded = json.decode(data:sub(13))
-		
+
         callback.conn.logger:warn('Encountered an error | response code ' .. response_code .. ' recieved for token "' .. token .. '", ' .. tostring(err))
         callback.conn.logger:debug('Encoded query: ' .. callback.encoded)
         callback.conn.logger:debug('Line calling reql.run: ' .. callback.caller.currentline)
@@ -91,7 +90,7 @@ function processor.processData(data)
 		else
 			data = data:sub(13)
         end
-        
+
 		if callback then
 			processor.cbs[token].f(nil, 'unknown response', data)
 			processor.cbs[token] = nil

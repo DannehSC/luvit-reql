@@ -101,7 +101,7 @@ function newReql(conn)
 		reql.conn.logger:assert(not reql.ran, 'ReQL instance already ran.')
 		reql.conn.logger:assert(tab.id ~= nil, 'argument \'id\' not passed to inOrRe')
 		reql.conn.logger:assert(cmanager:isCoro(), 'reql.inOrRe not ran in coroutine.')
-		reql.get(id).replace(tab)
+		reql.get(tab.id).replace(tab)
 		return reql
 	end
 	function reql.inOrUp(tab)
