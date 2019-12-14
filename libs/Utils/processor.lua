@@ -76,15 +76,16 @@ function processor.processData(data)
 	elseif errcodes[respn] then
 		local errcode = errcodes[respn]
         local err     = errcode.new(errcode.type)
-        
-        conn.logger:warn('Encountered an Error | response code ' .. response_code .. ' recieved for token "' .. token .. '", ' .. tostring(err))
-            
+        local decoded = json.decode(data:sub(13))
+		
+        callback.conn.logger:warn('Encountered an error | response code ' .. response_code .. ' recieved for token "' .. token .. '", ' .. tostring(err))
         callback.conn.logger:debug('Encoded query: ' .. callback.encoded)
         callback.conn.logger:debug('Line calling reql.run: ' .. callback.caller.currentline)
-        callback.f(nil, err, json.decode(data:sub(13)))
-        processor.cbs[token] = nil
+		callback.conn.logger:debug('Error data: ' .. data:sub(13))
+        callback.f(nil, err, decoded)
+		processor.cbs[token] = nil
 	else
-                callback.conn.logger:warn('response code ' .. tostring(response_code) .. ' recieved for token "' .. token .. '", unknown response')
+		callback.conn.logger:warn('response code ' .. tostring(response_code) .. ' recieved for token "' .. token .. '", unknown response')
 		if not data then
 			data = 'no data?'
 		else
