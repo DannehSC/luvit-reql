@@ -84,7 +84,7 @@ function processor.processData(data)
         callback.f(nil, err, json.decode(data:sub(13)))
         processor.cbs[token] = nil
 	else
-        conn.logger:warn('response code ' .. tostring(response_code) .. ' recieved for token "' .. token .. '", unknown response')
+                callback.conn.logger:warn('response code ' .. tostring(response_code) .. ' recieved for token "' .. token .. '", unknown response')
 		if not data then
 			data = 'no data?'
 		else
