@@ -216,7 +216,7 @@ function connect(options, callback, logger)
 	conn.reql = function()
 		return reql(conn)
 	end
-	
+
 	conn.test = function()
 		if checkCoroutine() then
 			require('./utils/test.lua')(conn)
@@ -228,7 +228,7 @@ function connect(options, callback, logger)
 	if checkCoroutine() then
 		logger:debug('Running Luvit-ReQL in Sync Mode')
 		connectToRethinkdb(conn)
-		
+
 		if callback then
 			coroutine.wrap(callback)(conn)
 		end

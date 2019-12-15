@@ -1,5 +1,4 @@
 
-local logger = require('./logger.lua')
 local processQuery = require('./query.lua')
 local cmanager = require('./coroutinemanager.lua')
 

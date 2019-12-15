@@ -46,7 +46,7 @@ function processor.processData(data)
 
 		local buffer = buffers[token]
 		local decoded = json.decode(data:sub(13))
-		for i, v in pairs(decoded.r) do table.insert(buffer.data, v) end
+		for _, v in pairs(decoded.r) do table.insert(buffer.data, v) end
 
 		callback.conn.logger:debug('response code 2 recieved for token "' .. token .. '"')
 		callback.f(buffer)
@@ -69,7 +69,7 @@ function processor.processData(data)
 
 		local decoded = json.decode(data:sub(13))
 
-		for i, v in pairs(decoded.r) do table.insert(buffers[token].data, v) end
+		for _, v in pairs(decoded.r) do table.insert(buffers[token].data, v) end
 	elseif errcodes[response_code] then
 		local errcode = errcodes[response_code]
         local err     = errcode.new(errcode.type)

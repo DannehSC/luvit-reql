@@ -21,7 +21,7 @@ local default = {
 }
 
 local format = string.format
-local sub, len, find = string.sub, string.len, string.find
+local find = string.find
 
 return {
 	connect = function(options, callback)
@@ -41,10 +41,10 @@ return {
 				options[k] = v
 			end
         end
-        
+
 		logger.options = options
         logger:setFile(options.file)
-        
+
 		if options.address:sub(#options.address) == '/' then
 			options.address = options.address:sub(1, #options.address - 1)
 		end
@@ -52,17 +52,17 @@ return {
 			logger:warn('Procotol not supplied, defaulting to http://')
 			options.address = format('http://%s', options.address)
         end
-        
+
 		return connect(options, callback, logger)
 	end,
 
 	reql = function()
 		return reql()
 	end,
-	
+
 	emitter = emitter,
-	
+
 	logger = logger_f(),
-	
+
 	_cmanager = cmanager
 }
