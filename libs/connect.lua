@@ -141,7 +141,7 @@ function connect(options, callback, logger)
 		auth.i = tonumber(auth.i)
 		local client_final_message = 'c=biws,r=' .. auth.r
 		local salt = ssl.base64(auth.s, false)
-		local salted_password, salt_error = pbkdf('sha256', auth_key, salt, auth.i, 32) -- NOTE: "salt_error" unused variable
+		local salted_password, _ = pbkdf('sha256', auth_key, salt, auth.i, 32) -- NOTE: "salt_error" is the second ret value
 		if not salted_password then
 			socket.close()
 			return logger:err(errors.ReqlDriverError('Salt error'))
