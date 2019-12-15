@@ -36,8 +36,6 @@ end
 for k in pairs(hierarchy) do calculateHierarchy(k) end
 for k, v in pairs(hierarchy) do hierarchy[k] = table.concat(v, '/') end
 
-local format = string.format
-
 local metatable = { __tostring = function(self) return self.message end }
 function ReqlError:__index(index)
     local path = hierarchy[index]

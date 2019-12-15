@@ -1,11 +1,9 @@
 
 local uv = require('uv')
 local ssl = require('openssl')
-local pp = require('pretty-print')
 
 local cg = collectgarbage
 local fmt = string.format
-local hrtime = uv.hrtime
 
 local S_PER_MIN = 60
 local MS_PER_S = 1000
