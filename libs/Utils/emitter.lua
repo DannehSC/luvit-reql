@@ -5,17 +5,17 @@ local emitter = { listeners = { } }
 
 function emitter:on(event, listener, sync)
 	if not self.listeners[event] then self.listeners[event] = { } end
-	
+
 	table.insert(self.listeners[event], { fn = listener, sync = sync })
-	
+
 	return listener
 end
 
 function emitter:once(event, listener, sync)
 	if not self.listeners[event] then self.listeners[event] = { } end
-	
+
 	table.insert(self.listeners[event], { fn = listener, once = true, sync = sync })
-	
+
 	return listener
 end
 
@@ -57,7 +57,7 @@ function emitter:removeAll(event)
 end
 
 function emitter:fire(event, ...)
-	local listeners = self.listeners[name]
+	local listeners = self.listeners[event]
 	if not listeners then return end
 
 	for _, listener in ipairs(listeners) do
@@ -77,8 +77,8 @@ end
 function emitter:waitFor(event, timeout, predicate)
 	local thread = coroutine.running()
 	local uv_timer
-	
-	local fn = self:once(name, function(...)
+
+	local fn = self:once(event, function(...)
 		if predicate and not predicate(...) then return end
 		if uv_timer then
 			timer.clearTimeout(uv_timer)
@@ -87,7 +87,7 @@ function emitter:waitFor(event, timeout, predicate)
 	end, true)
 
 	uv_timer = timeout and timer.setTimeout(timeout, function()
-		self:remove(name, fn)
+		self:remove(event, fn)
 		return assert(coroutine.resume(thread, false))
 	end)
 

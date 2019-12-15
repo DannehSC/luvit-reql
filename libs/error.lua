@@ -18,7 +18,7 @@ local hierarchy = {
 	ReqlOpIndeterminateError = 'ReqlAvailabilityError'
 }
 
-function calculateHierarchy(str)
+local function calculateHierarchy(str)
     local previous = hierarchy[str]
 
     if type(previous) == 'string' then
@@ -45,12 +45,12 @@ function ReqlError:__index(index)
     return function(message, term, frames)
         if term then
             frames = type(frames) == 'table' and frames or { }
-            
+
             message = ('%s | %s in:\n\t%s\n\t%s\n'):format(path, message, term, table.concat(frames, ',\n\t'))
         else
             message = ('%s | %s'):format(path, message)
         end
-            
+
 		return setmetatable({
             name = index,
             path = path,

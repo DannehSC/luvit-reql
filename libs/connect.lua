@@ -126,7 +126,7 @@ function connect(options, callback, logger)
 		}) .. '\0')
 
 		-- Second Server Challenge
-		res = json.decode(read()[1])
+		local res = json.decode(read()[1])
 		if not res.success then
 			socket.close()
 			return logger:err(errors.ReqlAuthError('Error: ' .. res.error))
