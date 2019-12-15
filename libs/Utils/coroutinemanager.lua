@@ -6,14 +6,13 @@ local manager = {
 }
 
 function manager:isCoro()
-	local thread, main = running()
+	local _, main = running()
 	return not main
 end
 
 function manager:yield(id)
 	if not self:isCoro() then return end
-	local thread = running()
-	self.threads[id] = thread
+	self.threads[id] = running()
 	return yield()
 end
 
